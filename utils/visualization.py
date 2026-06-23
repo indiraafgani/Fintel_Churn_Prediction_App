@@ -65,9 +65,11 @@ def churn_score_gauge(score: int, segment: str) -> go.Figure:
         },
     ))
     fig.update_layout(
-        height=230,
-        **_BASE,
-        margin=dict(l=20, r=20, t=30, b=10),
+    height=230,
+    paper_bgcolor=C_WHITE,
+    plot_bgcolor=C_WHITE,
+    font=dict(family="Inter, sans-serif", color=C_NAVY),
+    margin=dict(l=20, r=20, t=30, b=10),
     )
     return fig
 
