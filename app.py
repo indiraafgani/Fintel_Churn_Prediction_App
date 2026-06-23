@@ -38,7 +38,6 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="FINTel — Churn Intelligence",
-    page_icon="🔷",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -154,7 +153,7 @@ def load_artifacts():
 try:
     artifacts = load_artifacts()
 except FileNotFoundError:
-    st.error("❌ Model file not found. Pastikan `models/artifacts.pkl` tersedia.")
+    st.error("Model file not found. Pastikan `models/artifacts.pkl` tersedia.")
     st.stop()
 
 metrics          = artifacts["model_metrics"]
@@ -184,7 +183,6 @@ ref_data = load_ref_data()
 
 def segment_badge(seg: str) -> str:
     cls = {"High": "b-high", "Mid": "b-mid", "Low": "b-low"}.get(seg, "b-low")
-    icon = {"High": "🔴", "Mid": "🟡", "Low": "🟢"}.get(seg, "")
     return f'<span class="badge {cls}">{icon} {seg} Churn</span>'
 
 
@@ -212,9 +210,9 @@ def prob_bar(prob: float) -> str:
 
 def pred_box(prob: float, threshold: float) -> str:
     if prob >= threshold:
-        label, bg, border, color = "⚠️ Predicted to Churn",   "#FEF2F2", "#E74C3C55", "#991B1B"
+        label, bg, border, color = "Predicted to Churn",   "#FEF2F2", "#E74C3C55", "#991B1B"
     else:
-        label, bg, border, color = "✅ Predicted to Stay",     "#F0FDF4", "#27AE6055", "#065F46"
+        label, bg, border, color = "Predicted to Stay",     "#F0FDF4", "#27AE6055", "#065F46"
     return (
         f'<div class="pred-box" style="background:{bg};border:1px solid {border};">'
         f'<div style="font-size:13px;font-weight:700;color:{color};">{label}</div>'
@@ -373,9 +371,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 tab_existing, tab_new, tab_bulk = st.tabs([
-    "  🔍  Existing Customer  ",
-    "  ➕  New Customer  ",
-    "  📂  Bulk Prediction  ",
+    "  Existing Customer  ",
+    "  New Customer  ",
+    "  Bulk Prediction  ",
 ])
 
 
@@ -534,7 +532,7 @@ with tab_existing:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             # ── Global SHAP chart ──
-            with st.expander("📊 Global Feature Importance (semua pelanggan)", expanded=False):
+            with st.expander("Global Feature Importance (semua pelanggan)", expanded=False):
                 st.plotly_chart(
                     shap_global_bar(global_shap),
                     use_container_width=True,
@@ -545,7 +543,7 @@ with tab_existing:
         st.markdown("""
         <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
                     border:2px dashed rgba(71,105,150,0.2);">
-          <div style="font-size:44px;margin-bottom:14px;">🔍</div>
+          <div style="font-size:44px;margin-bottom:14px;"></div>
           <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
             Masukkan Customer ID untuk melihat laporan churn analysis</div>
           <div style="font-size:12px;color:#9AADC2;">
@@ -565,7 +563,7 @@ with tab_new:
     st.markdown("""
     <div style="background:white;border-radius:10px;padding:12px 18px;margin-bottom:16px;
                 border:1px solid rgba(15,29,61,0.07);font-size:12px;color:#476996;">
-      📝 Isi profil pelanggan baru untuk mendapatkan prediksi churn dan rekomendasi retensi personal.
+      Isi profil pelanggan baru untuk mendapatkan prediksi churn dan rekomendasi retensi personal.
     </div>
     """, unsafe_allow_html=True)
 
@@ -606,7 +604,7 @@ with tab_new:
             st.caption(f"Est. Total Charges: **${total_chg:,.2f}** · Est. CLTV: **${cltv:,}**")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("⚡ Predict Churn", use_container_width=True)
+        submitted = st.form_submit_button("Predict Churn", use_container_width=True)
 
     if submitted:
         input_row = pd.Series({
@@ -691,7 +689,7 @@ with tab_new:
 with tab_bulk:
     st.markdown("<br>", unsafe_allow_html=True)
 
-    with st.expander("📋 Format CSV yang Diperlukan", expanded=False):
+    with st.expander("Format CSV yang Diperlukan", expanded=False):
         st.markdown(f"""
         File CSV harus memiliki kolom berikut (header harus sama persis):
         ```
@@ -723,7 +721,7 @@ with tab_bulk:
 
         is_valid, msg = validate_upload(df_up)
         if not is_valid:
-            st.error(f"❌ File tidak valid. {msg}")
+            st.error(f"File tidak valid. {msg}")
             st.stop()
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
@@ -752,7 +750,7 @@ with tab_bulk:
         st.dataframe(df_up.head(10), use_container_width=True, hide_index=True)
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        run_btn = st.button("🚀 Run Bulk Prediction", use_container_width=True)
+        run_btn = st.button("Run Bulk Prediction", use_container_width=True)
 
         if run_btn:
             with st.spinner("Menjalankan prediksi untuk semua customer..."):
@@ -848,11 +846,11 @@ with tab_bulk:
         st.markdown("""
         <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
                     border:2px dashed rgba(71,105,150,0.2);">
-          <div style="font-size:44px;margin-bottom:14px;">📂</div>
+          <div style="font-size:44px;margin-bottom:14px;"></div>
           <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
             Upload CSV untuk prediksi massal</div>
           <div style="font-size:12px;color:#9AADC2;">
-            Gunakan tombol "📋 Format CSV" di atas untuk melihat kolom yang dibutuhkan</div>
+            Gunakan tombol "Format CSV" di atas untuk melihat kolom yang dibutuhkan</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -863,7 +861,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align:center;padding:16px;border-top:1px solid rgba(15,29,61,0.08);
             font-size:11px;color:#9AADC2;">
-  FINTel Customer Churn Intelligence Dashboard · Purwadhika Digital Technology School 2024<br>
+  FINTel Customer Churn Intelligence Dashboard · Purwadhika Digital Technology School 2026<br>
   Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 </div>
 """, unsafe_allow_html=True)
