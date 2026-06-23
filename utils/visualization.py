@@ -106,8 +106,12 @@ def shap_individual_bar(shap_display: List[Dict], title: str = "Individual SHAP 
 
 # ─── Global SHAP bar ────────────────────────────────────────────────────────────
 
-def shap_global_bar(global_importance: List[tuple], top_n: int = 10) -> go.Figure:
-    items  = global_importance[:top_n]
+def shap_global_bar(global_importance, top_n: int = 10) -> go.Figure:
+    # Support both dict and list of tuples
+    if isinstance(global_importance, dict):
+        items = sorted(global_importance.items(), key=lambda x: -x[1])[:top_n]
+    else:
+        items = global_importance[:top_n]
     names  = [i[0] for i in items]
     values = [i[1] for i in items]
 
