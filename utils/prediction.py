@@ -1,319 +1,249 @@
 """
-FINTel — Prediction & Recommendation Engine
-Single unified Logistic Regression model (no cold/non-cold split).
-Churn segmentation: Low / Mid / High based on ChurnScore binning.
-Per-feature SHAP recommendations: top-3 SHAP features → tiered actions.
+utils/prediction.py
+===================
+Helper functions untuk prediksi churn FINTel.
+Digunakan oleh app.py.
 """
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple, Any
+import shap
 
-# ─── Feature columns (input to model) ─────────────────────────────────────────
-FEATURE_COLS: List[str] = [
-    "gender", "SeniorCitizen", "Partner", "Dependents", "tenure",
-    "PhoneService", "MultipleLines", "InternetService", "OnlineSecurity",
-    "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV",
-    "StreamingMovies", "Contract", "PaperlessBilling", "PaymentMethod",
-    "MonthlyCharges", "TotalCharges", "CLTV",
+# ─────────────────────────────────────────────────────────────────────────────
+# FEATURE COLUMNS (input raw dari user / CSV upload)
+# Sesuaikan urutan ini dengan kolom di df_clean.csv
+# ─────────────────────────────────────────────────────────────────────────────
+FEATURE_COLS = [
+    "gender", "SeniorCitizen", "Partner", "Dependents",
+    "tenure", "PhoneService", "MultipleLines", "InternetService",
+    "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport",
+    "StreamingTV", "StreamingMovies", "Contract", "PaperlessBilling",
+    "PaymentMethod", "MonthlyCharges", "TotalCharges", "CLTV",
 ]
 
-# ─── Churn segment thresholds (from ChurnScore binning) ───────────────────────
-SEGMENT_LOW_MAX  = 33   # score 0–33   → Low
-SEGMENT_HIGH_MIN = 67   # score 67–100 → High
-                        # score 34–66  → Mid
+# ─────────────────────────────────────────────────────────────────────────────
+# RECOMMENDATION MAP
+# Key: nama feature (setelah encoding, bisa partial match)
+# Tier 1 = paling urgen (segment High), 2 = Mid, 3 = Low
+# ─────────────────────────────────────────────────────────────────────────────
+REC_MAP = {
+    "tenure": {
+        1: ("Masa kontrak sangat pendek — tawarkan diskon loyalitas 20% dan program reward eksklusif untuk perpanjangan 12 bulan.", "🔴 Prioritas Tinggi"),
+        2: ("Tenure menengah — perkenalkan program poin loyalitas dan benefit eksklusif member jangka panjang.", "🟡 Prioritas Sedang"),
+        3: ("Pelanggan sudah cukup lama — apresiasi dengan hadiah ulang tahun langganan dan akses fitur premium gratis 1 bulan.", "🔵 Prioritas Rendah"),
+    },
+    "Contract": {
+        1: ("Kontrak month-to-month sangat berisiko — tawarkan diskon 30% upgrade ke One Year atau Two Year contract.", "🔴 Prioritas Tinggi"),
+        2: ("Dorong upgrade kontrak dengan cashback atau gratis bulan pertama setelah upgrade.", "🟡 Prioritas Sedang"),
+        3: ("Informasikan benefit kontrak jangka panjang melalui email newsletter bulanan.", "🔵 Prioritas Rendah"),
+    },
+    "MonthlyCharges": {
+        1: ("Tagihan bulanan tinggi — review paket dan tawarkan bundling lebih hemat atau diskon retensi 15%.", "🔴 Prioritas Tinggi"),
+        2: ("Tawarkan paket yang lebih sesuai kebutuhan pelanggan atau opsi cicilan.", "🟡 Prioritas Sedang"),
+        3: ("Kirimkan summary nilai yang didapat pelanggan vs biaya yang dibayar setiap bulan.", "🔵 Prioritas Rendah"),
+    },
+    "InternetService": {
+        1: ("Layanan internet saat ini kurang memuaskan — tawarkan upgrade Fiber Optic dengan harga spesial.", "🔴 Prioritas Tinggi"),
+        2: ("Tawaran upgrade layanan internet dengan trial gratis 1 bulan.", "🟡 Prioritas Sedang"),
+        3: ("Informasikan opsi upgrade internet yang tersedia di area pelanggan.", "🔵 Prioritas Rendah"),
+    },
+    "TechSupport": {
+        1: ("Tidak ada Tech Support — tawarkan free trial Tech Support Premium 3 bulan.", "🔴 Prioritas Tinggi"),
+        2: ("Aktifkan Tech Support dasar gratis selama 2 bulan sebagai benefit retensi.", "🟡 Prioritas Sedang"),
+        3: ("Kirimkan panduan self-service dan FAQ untuk meningkatkan kepuasan.", "🔵 Prioritas Rendah"),
+    },
+    "OnlineSecurity": {
+        1: ("Tidak ada perlindungan Online Security — berikan free activation Online Security 3 bulan.", "🔴 Prioritas Tinggi"),
+        2: ("Tawarkan paket bundling keamanan digital dengan harga terjangkau.", "🟡 Prioritas Sedang"),
+        3: ("Edukasi manfaat keamanan digital melalui konten email.", "🔵 Prioritas Rendah"),
+    },
+    "PaperlessBilling": {
+        1: ("Aktifkan paperless billing dan berikan kredit $5 per bulan sebagai insentif.", "🔴 Prioritas Tinggi"),
+        2: ("Dorong transisi ke paperless billing dengan bonus poin loyalty.", "🟡 Prioritas Sedang"),
+        3: ("Informasikan keuntungan ekologis dan kemudahan paperless billing.", "🔵 Prioritas Rendah"),
+    },
+    "PaymentMethod": {
+        1: ("Metode pembayaran manual — tawarkan diskon 5% untuk beralih ke auto-pay.", "🔴 Prioritas Tinggi"),
+        2: ("Fasilitasi pendaftaran auto-pay dengan panduan mudah dan insentif.", "🟡 Prioritas Sedang"),
+        3: ("Ingatkan manfaat auto-pay: tidak pernah telat bayar, poin ekstra.", "🔵 Prioritas Rendah"),
+    },
+    "TotalCharges": {
+        1: ("Total tagihan besar tapi risiko churn tinggi — tawarkan program cicilan atau restrukturisasi tagihan.", "🔴 Prioritas Tinggi"),
+        2: ("Berikan summary nilai layanan untuk justifikasi total tagihan.", "🟡 Prioritas Sedang"),
+        3: ("Kirimkan laporan penggunaan dan nilai yang diterima pelanggan.", "🔵 Prioritas Rendah"),
+    },
+    "CLTV": {
+        1: ("CLTV tinggi — pelanggan sangat berharga. Assign dedicated account manager dan prioritaskan penanganan keluhan.", "🔴 Prioritas Tinggi"),
+        2: ("Tawarkan program VIP dengan akses ke fitur eksklusif.", "🟡 Prioritas Sedang"),
+        3: ("Sertakan dalam program loyalitas tier silver/gold.", "🔵 Prioritas Rendah"),
+    },
+    # Default fallback
+    "DEFAULT": {
+        1: ("Segera hubungi pelanggan untuk survei kepuasan dan tawarkan solusi retensi personal.", "🔴 Prioritas Tinggi"),
+        2: ("Kirimkan penawaran khusus retensi melalui email/SMS.", "🟡 Prioritas Sedang"),
+        3: ("Sertakan dalam program loyalty rutin dan pantau terus aktivitas.", "🔵 Prioritas Rendah"),
+    },
+}
 
-# ─── Probability → ChurnScore piecewise scaler ────────────────────────────────
-# Three anchor points: prob=0 → 0,  prob=threshold → 50,  prob=1 → 100
-def prob_to_churnscore(prob: float, threshold: float) -> int:
-    if threshold <= 0 or threshold >= 1:
-        return int(np.clip(round(prob * 100), 0, 100))
-    pivot_score = 50
-    if prob <= threshold:
-        score = (prob / threshold) * pivot_score
+LEVEL_LABELS = {1: "Urgent", 2: "Medium Priority", 3: "Low Priority"}
+
+
+def _get_recommendation(feature_name: str, segment: str) -> dict:
+    """Cari rekomendasi berdasarkan nama fitur dan segment."""
+    tier = {"High": 1, "Mid": 2, "Low": 3}.get(segment, 3)
+
+    # Cari exact atau partial match di REC_MAP
+    matched_key = None
+    for key in REC_MAP:
+        if key == "DEFAULT":
+            continue
+        if key.lower() in feature_name.lower() or feature_name.lower().startswith(key.lower()):
+            matched_key = key
+            break
+
+    rec_dict = REC_MAP.get(matched_key, REC_MAP["DEFAULT"])
+    text, level_label = rec_dict[tier]
+    return {
+        "feature_name": feature_name,
+        "recommendation": text,
+        "level_label": level_label,
+    }
+
+
+def prob_to_churnscore(prob: float) -> int:
+    """
+    Piecewise scaler: probability → ChurnScore 0–100
+    Low (0–33) | Mid (34–66) | High (67–100)
+    """
+    if prob < 0.33:
+        score = int(prob / 0.33 * 33)
+    elif prob < 0.67:
+        score = 33 + int((prob - 0.33) / 0.34 * 33)
     else:
-        score = pivot_score + ((prob - threshold) / (1 - threshold)) * (100 - pivot_score)
-    return int(np.clip(round(score), 0, 100))
+        score = 66 + int((prob - 0.67) / 0.33 * 34)
+    return min(max(score, 0), 100)
 
 
 def get_churn_segment(churn_score: int) -> str:
-    """Map churn score (0–100) → Low / Mid / High."""
-    if churn_score <= SEGMENT_LOW_MAX:
-        return "Low"
-    elif churn_score < SEGMENT_HIGH_MIN:
+    if churn_score >= 67:
+        return "High"
+    elif churn_score >= 34:
         return "Mid"
-    return "High"
+    return "Low"
 
 
-# ─── Per-feature SHAP recommendations ─────────────────────────────────────────
-# Each feature has 3 tiered actions (level 1 = most urgent / highest-ranked SHAP).
-# Keys must match selected_feature_names from the trained model.
-# For binary-encoded features, we map the "base" concept back to the original column.
-# Recommendations are segment-aware where noted with [Low] [Mid] [High] prefix variants.
+def _preprocess_row(row: pd.Series, artifacts: dict) -> np.ndarray:
+    """Preprocess single row: encode → scale → select features."""
+    scaler   = artifacts["scaler"]
+    selector = artifacts["selector"]
+    all_feat = artifacts["feature_names_all"]
 
-FEATURE_REC_MAP: Dict[str, Dict[str, str]] = {
-    # ── Tenure ──────────────────────────────────────────────────────────────
-    "tenure": {
-        "1": "Luncurkan program onboarding intensif bulan 1–3: welcome call, walkthrough produk, dan check-in mingguan dengan customer success.",
-        "2": "Berikan insentif loyalty pada milestone: hadiah kecil di bulan 3, 6, dan 12 untuk memperkuat kebiasaan menggunakan layanan.",
-        "3": "Kirim survei kepuasan singkat (3 pertanyaan) pada akhir bulan pertama untuk mendeteksi friksi lebih awal.",
-    },
-    "TotalCharges": {
-        "1": "Evaluasi nilai lifetime pelanggan ini — jika CLTV tinggi, eskalasikan ke dedicated account manager segera.",
-        "2": "Tawarkan program cicilan atau restrukturisasi tagihan agar total biaya terasa lebih ringan dan mengurangi risiko payment shock.",
-        "3": "Tampilkan ringkasan manfaat kumulatif yang sudah diterima pelanggan sesuai total biaya yang dibayarkan.",
-    },
-    "MonthlyCharges": {
-        "1": "Tawarkan paket bundling yang lebih hemat sesuai layanan aktif — potensi penghematan 10–20% per bulan.",
-        "2": "Komunikasikan value proposition secara eksplisit: kirim laporan bulanan yang membandingkan biaya vs manfaat yang didapat.",
-        "3": "Review apakah ada add-on yang tidak digunakan — tawarkan downgrade paket yang lebih sesuai kebutuhan.",
-    },
-    # ── Contract ────────────────────────────────────────────────────────────
-    "Contract_0": {
-        "1": "Berikan penawaran upgrade ke kontrak tahunan dengan diskon 15–20% — sampaikan via personal outreach dari customer success.",
-        "2": "Tampilkan simulasi penghematan biaya jika beralih dari month-to-month ke kontrak 1 tahun.",
-        "3": "Kirim reminder 7 hari sebelum tanggal renewal dengan tawaran eksklusif untuk penguncian kontrak lebih panjang.",
-    },
-    "Contract_1": {
-        "1": "Dorong upgrade ke kontrak 2 tahun dengan insentif tambahan: bonus kuota atau diskon bulan pertama gratis.",
-        "2": "Highlight stabilitas harga jangka panjang — pelanggan kontrak 2 tahun tidak terdampak kenaikan tarif.",
-        "3": "Tawarkan early renewal 3 bulan sebelum kontrak habis dengan harga terkunci.",
-    },
-    # ── Internet Service ────────────────────────────────────────────────────
-    "InternetService_0": {
-        "1": "Tawarkan upgrade ke Fiber Optic dengan trial gratis 1 bulan — kecepatan dan reliabilitas yang jauh lebih baik.",
-        "2": "Bandingkan secara konkret kecepatan layanan saat ini vs Fiber Optic melalui infografis personal.",
-        "3": "Kirim penawaran bundling Fiber Optic + TV Streaming dengan harga kompetitif.",
-    },
-    # ── Online Security ──────────────────────────────────────────────────────
-    "OnlineSecurity_0": {
-        "1": "Aktifkan trial gratis OnlineSecurity 30 hari — sertakan demo singkat manfaat perlindungan data.",
-        "2": "Kirim email edukasi tentang risiko keamanan digital dan bagaimana OnlineSecurity melindungi pelanggan.",
-        "3": "Bundling OnlineSecurity dengan layanan yang sudah aktif pada harga diskon 25%.",
-    },
-    "OnlineSecurity_1": {
-        "1": "Pelanggan sudah aktif menggunakan OnlineSecurity — highlight nilai fitur ini dan cross-sell OnlineBackup.",
-        "2": "Tawarkan upgrade ke paket keamanan premium yang mencakup DeviceProtection sekaligus.",
-        "3": "Kirim laporan bulanan aktivitas keamanan akun untuk meningkatkan perceived value layanan.",
-    },
-    # ── Online Backup ────────────────────────────────────────────────────────
-    "OnlineBackup_1": {
-        "1": "Pelanggan sudah menggunakan OnlineBackup — dorong ekspansi ke DeviceProtection untuk perlindungan end-to-end.",
-        "2": "Kirim reminder manfaat backup cloud dan statistik pemulihan data sebagai edukasi retention.",
-        "3": "Cross-sell TechSupport sebagai pelengkap OnlineBackup untuk pengalaman digital yang lebih aman.",
-    },
-    # ── Device Protection ──────────────────────────────────────────────────
-    "DeviceProtection_0": {
-        "1": "Tawarkan trial gratis DeviceProtection 30 hari — sampaikan nilai klaim perangkat rata-rata vs biaya bulanan.",
-        "2": "Kirim simulasi kerugian finansial jika perangkat rusak tanpa proteksi — ROI yang jelas.",
-        "3": "Bundling DeviceProtection + TechSupport dengan harga paket lebih hemat dari beli satuan.",
-    },
-    # ── Tech Support ─────────────────────────────────────────────────────────
-    "TechSupport_0": {
-        "1": "Aktifkan akses TechSupport gratis selama 30 hari — berikan sesi onboarding 1-on-1 dengan teknisi.",
-        "2": "Kirim statistik rata-rata waktu resolusi masalah dengan TechSupport vs tanpa dukungan.",
-        "3": "Tawarkan paket TechSupport + OnlineSecurity dalam bundling hemat untuk pelanggan segmen ini.",
-    },
-    "TechSupport_1": {
-        "1": "Pelanggan sudah aktif dengan TechSupport — dorong upgrade ke paket premium dengan response time lebih cepat.",
-        "2": "Kirim survei kepuasan TechSupport dan gunakan feedback untuk personalisasi layanan berikutnya.",
-        "3": "Cross-sell DeviceProtection sebagai natural complement dari TechSupport yang sudah digunakan.",
-    },
-    # ── Streaming Movies ─────────────────────────────────────────────────────
-    "StreamingMovies_1": {
-        "1": "Pelanggan aktif streaming — tawarkan upgrade bandwidth atau paket multi-device untuk pengalaman lebih baik.",
-        "2": "Kirim rekomendasi konten personal dan notifikasi rilis terbaru untuk meningkatkan engagement.",
-        "3": "Bundling StreamingTV + StreamingMovies dalam paket entertainment lengkap dengan harga bundling.",
-    },
-    # ── Payment Method ───────────────────────────────────────────────────────
-    "PaymentMethod_0": {
-        "1": "Tawarkan beralih ke pembayaran otomatis (bank transfer/kartu kredit) dengan cashback bulan pertama.",
-        "2": "Kirim reminder tagihan lebih awal + kemudahan link pembayaran satu klik untuk mengurangi friction.",
-        "3": "Program reward poin untuk pelanggan yang membayar tepat waktu selama 3 bulan berturut-turut.",
-    },
-    "PaymentMethod_1": {
-        "1": "Electronic check memiliki korelasi churn lebih tinggi — insentifkan migrasi ke auto-pay dengan diskon tagihan.",
-        "2": "Komunikasikan keamanan dan kemudahan pembayaran otomatis melalui email edukatif.",
-        "3": "Tawarkan cashback 5% tagihan bulan depan untuk pelanggan yang beralih ke auto-pay bulan ini.",
-    },
-    "PaymentMethod_2": {
-        "1": "Tawarkan reward loyalty khusus untuk pelanggan yang mempertahankan metode pembayaran otomatis.",
-        "2": "Kirim konfirmasi pembayaran yang jelas dan ringkasan manfaat bulan ini untuk memperkuat perceived value.",
-        "3": "Aktifkan notifikasi real-time setiap pembayaran berhasil untuk meningkatkan kepercayaan.",
-    },
-    # ── Paperless Billing ────────────────────────────────────────────────────
-    "PaperlessBilling_Yes": {
-        "1": "Pelanggan paperless billing lebih mudah dijangkau secara digital — aktifkan push notification untuk penawaran retensi.",
-        "2": "Kirim laporan penggunaan bulanan yang interaktif via email untuk meningkatkan engagement.",
-        "3": "Tawarkan e-voucher kecil sebagai reward atas preferensi paperless (eco-friendly incentive).",
-    },
-    # ── Demographics ─────────────────────────────────────────────────────────
-    "SeniorCitizen_Yes": {
-        "1": "Siapkan dedicated senior support line dengan waktu tunggu prioritas dan agen yang terlatih untuk segmen lansia.",
-        "2": "Tawarkan paket yang disederhanakan — lebih sedikit pilihan, lebih mudah dipahami, dengan harga transparan.",
-        "3": "Kirim panduan penggunaan layanan dalam format yang mudah dibaca (font lebih besar, langkah lebih sederhana).",
-    },
-    "Partner_Yes": {
-        "1": "Tawarkan paket keluarga atau pasangan — bundle dua layanan dengan diskon gabungan 15%.",
-        "2": "Kirim penawaran referral: pelanggan yang mengajak pasangan/keluarga mendapat cashback.",
-        "3": "Highlight manfaat berbagi akun streaming atau layanan multi-device untuk segmen ini.",
-    },
-    "Dependents_Yes": {
-        "1": "Tawarkan paket family plan dengan kuota lebih besar dan multi-device untuk mendukung kebutuhan keluarga.",
-        "2": "Kirim konten edukasi tentang parental control dan keamanan internet anak — tambah perceived value.",
-        "3": "Program loyalty family: poin reward kumulatif untuk seluruh anggota keluarga dalam satu akun.",
-    },
-}
+    # Build DataFrame dengan kolom raw
+    df_row = pd.DataFrame([row[FEATURE_COLS]])
 
-# Fallback untuk feature yang tidak ada di map
-_FALLBACK_REC = {
-    "1": "Lakukan outreach personal dari tim customer success untuk memahami kebutuhan spesifik pelanggan ini.",
-    "2": "Tawarkan konsultasi produk gratis untuk memastikan pelanggan menggunakan layanan yang paling sesuai.",
-    "3": "Kirim survei kepuasan dan tindak lanjuti feedback dalam 48 jam untuk menunjukkan komitmen pelayanan.",
-}
+    # Encode categorical
+    cat_cols = df_row.select_dtypes(include="object").columns.tolist()
+    df_enc   = pd.get_dummies(df_row, columns=cat_cols, drop_first=False)
+
+    # Align columns dengan training set
+    for col in all_feat:
+        if col not in df_enc.columns:
+            df_enc[col] = 0.0
+    df_enc = df_enc[all_feat].astype(float)
+
+    # Scale & select
+    X_sc  = scaler.transform(df_enc)
+    X_sel = selector.transform(X_sc)
+    return X_sel
 
 
-def get_feature_recommendations(
-    shap_feature_name: str,
-    rank: int,
-) -> str:
+def predict_single(row: pd.Series, artifacts: dict) -> dict:
     """
-    Given a SHAP feature name and its rank (1/2/3), return the appropriate
-    tiered recommendation text.
-    rank 1 = most important (highest |SHAP|) → action level "1"
-    rank 2 = second                           → action level "2"
-    rank 3 = third                            → action level "3"
+    Prediksi satu baris data.
+
+    Returns dict:
+        probability, churn_score, segment, threshold,
+        shap_display (list of dict), recommendations (list of dict)
     """
-    level_key = str(rank)
-    rec_dict  = FEATURE_REC_MAP.get(shap_feature_name, _FALLBACK_REC)
-    return rec_dict.get(level_key, _FALLBACK_REC[level_key])
+    model     = artifacts["model"]
+    sel_names = artifacts["selected_feature_names"]
+    threshold = artifacts["model_metrics"]["threshold"]
 
+    X_sel = _preprocess_row(row, artifacts)
+    prob  = float(model.predict_proba(X_sel)[0, 1])
+    cs    = prob_to_churnscore(prob)
+    seg   = get_churn_segment(cs)
 
-def get_shap_top3_recommendations(
-    shap_values: np.ndarray,
-    feature_names: List[str],
-) -> List[Dict[str, str]]:
-    """
-    Given per-customer SHAP values and feature names,
-    return top-3 recommendations in ranked order.
+    # SHAP individual
+    explainer = shap.TreeExplainer(model)
+    sv        = explainer.shap_values(X_sel)
+    if isinstance(sv, list):
+        sv = sv[1]  # class 1
+    sv = sv[0]  # first (only) row
 
-    Returns list of 3 dicts:
-        [{rank, feature_name, shap_value, direction, recommendation, level_label}, ...]
-    """
-    abs_shap = np.abs(shap_values)
-    top3_idx = np.argsort(abs_shap)[::-1][:3]
+    # Build shap_display sorted by abs value
+    shap_items = sorted(
+        [{"name": n, "value": float(v)} for n, v in zip(sel_names, sv)],
+        key=lambda x: abs(x["value"]),
+        reverse=True,
+    )
+    for item in shap_items:
+        item["direction"] = "up" if item["value"] > 0 else "dn"
 
-    results = []
-    level_labels = {1: "Priority action", 2: "Supporting action", 3: "Additional action"}
-
-    for rank, idx in enumerate(top3_idx, start=1):
-        fname = feature_names[idx]
-        val   = float(shap_values[idx])
-        results.append({
-            "rank":          rank,
-            "feature_name":  fname,
-            "shap_value":    round(val, 4),
-            "direction":     "up" if val > 0 else "down",
-            "recommendation": get_feature_recommendations(fname, rank),
-            "level_label":   level_labels[rank],
-        })
-    return results
-
-
-# ─── Single-customer inference ────────────────────────────────────────────────
-
-def transform_row(row: pd.Series, artifacts: Dict[str, Any]) -> np.ndarray:
-    """Transform a single customer row through preprocessor → scaler → feature_selection."""
-    model        = artifacts["model"]
-    preprocessor = model.named_steps["preprocessor"]
-    scaler       = model.named_steps["scaler"]
-    feat_sel     = model.named_steps["feature_selection"]
-
-    X   = pd.DataFrame([row[FEATURE_COLS]])
-    Xp  = preprocessor.transform(X)
-    Xs  = scaler.transform(Xp)
-    Xf  = feat_sel.transform(Xs)
-    return Xf
-
-
-def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Full inference for a single customer.
-    Returns probability, churn_score, segment (Low/Mid/High),
-    SHAP values, and per-customer tiered recommendations.
-    """
-    import shap as _shap
-
-    model         = artifacts["model"]
-    threshold     = artifacts["threshold"]
-    feature_names = artifacts["selected_feature_names"]
-    clf           = model.named_steps["classifier"]
-    X_background  = artifacts["X_sel_background"]
-
-    X_sel = transform_row(row, artifacts)
-    prob  = float(model.predict_proba(pd.DataFrame([row[FEATURE_COLS]]))[0, 1])
-    churn_score = prob_to_churnscore(prob, threshold)
-    segment     = get_churn_segment(churn_score)
-    prediction  = "Churn" if prob >= threshold else "No Churn"
-
-    # Per-customer SHAP
-    explainer  = _shap.LinearExplainer(clf, X_background)
-    shap_vals  = explainer.shap_values(X_sel)[0]  # shape (n_features,)
-
-    # Top-3 recs
-    recs = get_shap_top3_recommendations(shap_vals, feature_names)
-
-    # All SHAP for waterfall display (top 8 by |SHAP|)
-    top8_idx  = np.argsort(np.abs(shap_vals))[::-1][:8]
-    shap_display = [
-        {
-            "name":      feature_names[i],
-            "value":     round(float(shap_vals[i]), 4),
-            "direction": "up" if shap_vals[i] > 0 else "down",
-        }
-        for i in top8_idx
-    ]
+    # Top-3 recommendations
+    top3 = shap_items[:3]
+    recs = []
+    for rank, item in enumerate(top3, start=1):
+        rec = _get_recommendation(item["name"], seg)
+        rec["rank"] = rank
+        recs.append(rec)
 
     return {
-        "probability":   round(prob, 4),
-        "churn_score":   churn_score,
-        "segment":       segment,
-        "prediction":    prediction,
-        "threshold":     round(threshold, 4),
-        "shap_display":  shap_display,
+        "probability":     prob,
+        "churn_score":     cs,
+        "segment":         seg,
+        "threshold":       threshold,
+        "shap_display":    shap_items,
         "recommendations": recs,
     }
 
 
-# ─── Bulk inference ───────────────────────────────────────────────────────────
-
-def predict_bulk(df: pd.DataFrame, artifacts: Dict[str, Any]) -> pd.DataFrame:
+def predict_bulk(df: pd.DataFrame, artifacts: dict) -> pd.DataFrame:
     """
-    Run inference on a full DataFrame.
-    Adds columns: Churn_Probability, Churn_Score, Churn_Segment, Predicted_Label.
-    No per-row SHAP (too slow for bulk) — adds global top-feature context instead.
+    Prediksi bulk dari DataFrame.
+    Mengembalikan df asli + kolom hasil prediksi.
     """
     model     = artifacts["model"]
-    threshold = artifacts["threshold"]
+    scaler    = artifacts["scaler"]
+    selector  = artifacts["selector"]
+    all_feat  = artifacts["feature_names_all"]
+    threshold = artifacts["model_metrics"]["threshold"]
 
-    X     = df[FEATURE_COLS].copy()
-    probs = model.predict_proba(X)[:, 1]
+    # Encode
+    cat_cols = df[FEATURE_COLS].select_dtypes(include="object").columns.tolist()
+    df_enc   = pd.get_dummies(df[FEATURE_COLS], columns=cat_cols, drop_first=False)
 
-    scores   = [prob_to_churnscore(p, threshold) for p in probs]
-    segments = [get_churn_segment(s) for s in scores]
-    labels   = ["Churn" if p >= threshold else "No Churn" for p in probs]
+    for col in all_feat:
+        if col not in df_enc.columns:
+            df_enc[col] = 0.0
+    df_enc = df_enc[all_feat].astype(float)
 
-    result = df.copy()
-    result["Churn_Probability"] = np.round(probs, 4)
-    result["Churn_Score"]       = scores
-    result["Churn_Segment"]     = segments
-    result["Predicted_Label"]   = labels
-    return result
+    X_sc   = scaler.transform(df_enc)
+    X_sel  = selector.transform(X_sc)
+    probas = model.predict_proba(X_sel)[:, 1]
+
+    df["Churn_Probability"] = probas
+    df["Churn_Score"]       = [prob_to_churnscore(p) for p in probas]
+    df["Churn_Segment"]     = [get_churn_segment(s) for s in df["Churn_Score"]]
+    df["Predicted_Label"]   = ["Churn" if p >= threshold else "No Churn" for p in probas]
+    return df
 
 
-def validate_upload(df: pd.DataFrame) -> Tuple[bool, str]:
-    """Validate that an uploaded CSV has all required feature columns."""
-    missing = set(FEATURE_COLS) - set(df.columns)
+def validate_upload(df: pd.DataFrame):
+    """Validasi kolom CSV yang diupload."""
+    missing = [c for c in FEATURE_COLS if c not in df.columns]
     if missing:
-        return False, f"Kolom yang hilang: {sorted(missing)}"
+        return False, f"Kolom tidak ditemukan: {missing}"
+    if len(df) == 0:
+        return False, "File kosong."
     return True, "OK"
