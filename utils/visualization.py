@@ -28,7 +28,6 @@ _BASE = dict(
     paper_bgcolor=C_WHITE,
     plot_bgcolor=C_WHITE,
     font=dict(family="Inter, sans-serif", color=C_NAVY),
-    margin=dict(l=16, r=16, t=40, b=16),
 )
 
 
