@@ -365,7 +365,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
-  <h1>🔷 FINTel Churn Intelligence Dashboard</h1>
+  <h1>FINTel Churn Intelligence Dashboard</h1>
   <p>ML-powered churn prediction, Low/Mid/High segmentation & SHAP-based personalised retention recommendations</p>
 </div>
 """, unsafe_allow_html=True)
