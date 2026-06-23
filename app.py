@@ -183,7 +183,7 @@ ref_data = load_ref_data()
 
 def segment_badge(seg: str) -> str:
     cls = {"High": "b-high", "Mid": "b-mid", "Low": "b-low"}.get(seg, "b-low")
-    return f'<span class="badge {cls}">{icon} {seg} Churn</span>'
+    return f'<span class="badge {cls}">{seg} Churn</span>'
 
 
 def info_row(label: str, value: str) -> str:
