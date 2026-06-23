@@ -354,7 +354,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-footer">
-      FINTel Capstone · Purwadhika 2024<br>
+      FINTel Capstone · Purwadhika 2026<br>
       Akbar K. · Khaerun N. · Indira F.A.
     </div>
     """, unsafe_allow_html=True)
