@@ -172,8 +172,8 @@ selected_names = artifacts["selected_feature_names"]
 def load_ref_data():
     try:
         df = pd.read_csv("data/df_clean.csv")
-        if "CustomerID" not in df.columns:
-            df.insert(0, "CustomerID", [f"CUST-{i+1:05d}" for i in range(len(df))])
+        if "customerID" not in df.columns:
+            df.insert(0, "customerID", [f"CUST-{i+1:05d}" for i in range(len(df))])
         return df
     except FileNotFoundError:
         return None
@@ -410,7 +410,7 @@ with tab_existing:
         cid   = cid_input.strip().upper()
         found = None
         if ref_data is not None:
-            match = ref_data[ref_data["CustomerID"].str.upper() == cid]
+            match = ref_data[ref_data["customerID"].str.upper() == cid]
             if not match.empty:
                 found = match.iloc[0]
 
@@ -709,7 +709,7 @@ with tab_bulk:
         ```
         Kolom opsional yang ditampilkan jika ada: `CustomerID`
         """)
-        template = pd.DataFrame(columns=["CustomerID"] + FEATURE_COLS)
+        template = pd.DataFrame(columns=["customerID"] + FEATURE_COLS)
         st.download_button(
             "⬇ Download Template CSV",
             data=template.to_csv(index=False),
@@ -817,7 +817,7 @@ with tab_bulk:
             st.markdown('<div class="section-title">Prediction Result Table</div>', unsafe_allow_html=True)
 
             display_cols = (
-                (["CustomerID"] if "CustomerID" in df_res.columns else []) +
+                (["customerID"] if "customerID" in df_res.columns else []) +
                 ["tenure", "Contract", "MonthlyCharges",
                  "Churn_Probability", "Churn_Score",
                  "Predicted_Label", "Churn_Segment"]
