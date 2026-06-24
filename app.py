@@ -192,8 +192,8 @@ city_list = load_city_list()
 # ─────────────────────────────────────────────────────────────────────────────
 
 def segment_badge(seg: str) -> str:
-    cls = {"Tinggi": "b-tinggi", "Sedang": "b-sedang", "Rendah": "b-rendah"}.get(seg, "b-rendah")
-    return f'<span class="badge {cls}">{seg} Churn</span>'
+    cls  = {"Tinggi": "b-high", "Sedang": "b-mid", "Rendah": "b-low"}.get(seg, "b-low")
+    return f'<span class="badge {cls}">{icon} Churn {seg}</span>'
 
 
 def info_row(label: str, value: str) -> str:
