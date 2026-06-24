@@ -153,7 +153,7 @@ def load_artifacts():
 try:
     artifacts = load_artifacts()
 except FileNotFoundError:
-    st.error("Model file not found. Pastikan `models/artifacts.pkl` tersedia.")
+    st.error("Model file tidak ditemukan. Pastikan `models/artifacts.pkl` tersedia.")
     st.stop()
 
 metrics          = artifacts["model_metrics"]
@@ -209,7 +209,7 @@ def prob_bar(prob: float) -> str:
     color = "#E74C3C" if pct >= 67 else ("#F39C12" if pct >= 33 else "#27AE60")
     return (
         f'<div class="prob-bar-wrap">'
-        f'<div class="prob-labels"><span>Churn Probability</span>'
+        f'<div class="prob-labels"><span>Probabilitas Churn</span>'
         f'<span style="font-weight:700;color:{color};">{pct}%</span></div>'
         f'<div class="prob-track">'
         f'<div class="shap-fill" style="width:{pct}%;background:{color};height:9px;border-radius:5px;"></div>'
@@ -219,9 +219,9 @@ def prob_bar(prob: float) -> str:
 
 def pred_box(prob: float, threshold: float) -> str:
     if prob >= threshold:
-        label, bg, border, color = "Predicted to Churn",   "#FEF2F2", "#E74C3C55", "#991B1B"
+        label, bg, border, color = "Diprediksi Akan Churn",   "#FEF2F2", "#E74C3C55", "#991B1B"
     else:
-        label, bg, border, color = "Predicted to Stay",     "#F0FDF4", "#27AE6055", "#065F46"
+        label, bg, border, color = "Diprediksi Akan Bertahan",     "#F0FDF4", "#27AE6055", "#065F46"
     return (
         f'<div class="pred-box" style="background:{bg};border:1px solid {border};">'
         f'<div style="font-size:13px;font-weight:700;color:{color};">{label}</div>'
@@ -291,11 +291,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section">About Model</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Model Tentang</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
       <div class="sb-pill-l">Model</div>
-      <div style="font-size:13px;color:white;margin-top:2px;">Customer Churn Prediction</div>
+      <div style="font-size:13px;color:white;margin-top:2px;">Prediksi Churn Pelanggan</div>
       <div class="sb-pill-s">Logistic Regression · F2-Optimized</div>
     </div>
     """, unsafe_allow_html=True)
@@ -303,21 +303,21 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Dataset</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
-      <div class="sb-pill-l">Total Customers</div>
+      <div class="sb-pill-l">Total Pelanggans</div>
       <div class="sb-pill-v">7,032</div>
       <div class="sb-pill-s">Telco Customer Churn · IBM Dataset</div>
     </div>
     <div class="sb-pill">
-      <div class="sb-pill-l">Features Used</div>
+      <div class="sb-pill-l">Fitur yang Digunakan</div>
       <div class="sb-pill-v">20</div>
-      <div class="sb-pill-s">Post SelectKBest (ANOVA F-test, k=20)</div>
+      <div class="sb-pill-s">Setelah Seleksi Fitur SelectKBest (Uji ANOVA F, k=20)</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section">Churn Segmentation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Segmentasi Churn</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
-      <div class="sb-pill-l">Churn Segmentation</div>
+      <div class="sb-pill-l">Segmentasi Churn</div>
       <div class="seg-legend-row" style="margin-top:6px;">
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#27AE60;"></div>
@@ -335,7 +335,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section">Evaluation Metrics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Metrik Evaluasi</div>', unsafe_allow_html=True)
     for k, v in [
         ("F2 (β=2)",  metrics["f2"]),
         ("ROC-AUC",   metrics["roc_auc"]),
@@ -349,7 +349,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="sb-section">Business Objective</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Tujuan Bisnis </div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.65;padding:0 2px;">
       Prediksi churn pelanggan dan berikan rekomendasi retensi personal
@@ -372,19 +372,19 @@ with st.sidebar:
 st.markdown("""
 <div class="page-header">
   <h1>FINTel Churn Intelligence Dashboard</h1>
-  <p>ML-powered churn prediction, Low/Mid/High segmentation & SHAP-based personalised retention recommendations</p>
+  <p>Prediksi churn berbasis Machine Learning, segmentasi risiko pelanggan (Rendah/Sedang/Tinggi), serta rekomendasi retensi yang dipersonalisasi berdasarkan analisis SHAP.</p>
 </div>
 """, unsafe_allow_html=True)
 
 tab_existing, tab_new, tab_bulk = st.tabs([
-    "  Existing Customer  ",
-    "  New Customer  ",
-    "  Bulk Prediction  ",
+    "  Pelanggan Lama  ",
+    "  Pelanggan Baru  ",
+    "  Prediksi Secara Keseluruhan (CSV)  ",
 ])
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 1 — EXISTING CUSTOMER
+#  TAB 1 — Pelanggan Lama
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_existing:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -438,7 +438,7 @@ with tab_existing:
             # ── Info cards ──
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Customer Overview</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Ringkasan Pelanggan</div>', unsafe_allow_html=True)
                 st.markdown(
                     info_row("Customer ID", f'<span style="font-family:JetBrains Mono,monospace;font-size:11px">{cid}</span>') +
                     info_row("Gender",       str(found.get("gender", "—"))) +
@@ -450,7 +450,7 @@ with tab_existing:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with col_b:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Account Information</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Informasi Akun</div>', unsafe_allow_html=True)
                 st.markdown(
                     info_row("Tenure",          f'{int(found.get("tenure", 0))} month(s)') +
                     info_row("Contract",         str(found.get("Contract",        "—"))) +
@@ -462,7 +462,7 @@ with tab_existing:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with col_c:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Billing Information</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Informasi Pembayaran</div>', unsafe_allow_html=True)
                 st.markdown(
                     info_row("Monthly Charges", f'${float(found.get("MonthlyCharges", 0)):.2f}') +
                     info_row("Total Charges",   f'${float(found.get("TotalCharges", 0)):,.2f}') +
@@ -476,7 +476,7 @@ with tab_existing:
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
 
             # ── Add-Ons card ──
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Add-On Services</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Layanan Tambahan (Add-On)</div>', unsafe_allow_html=True)
             col_add1, col_add2, col_add3 = st.columns(3)
             with col_add1:
                 st.markdown(
@@ -522,7 +522,7 @@ with tab_existing:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with col_d:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Prediction Detail</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Detail Prediksi</div>', unsafe_allow_html=True)
                 st.markdown(prob_bar(prob), unsafe_allow_html=True)
                 st.markdown(pred_box(prob, thr), unsafe_allow_html=True)
                 st.markdown(
@@ -535,18 +535,18 @@ with tab_existing:
 
             # ── SHAP + Recommendations ──
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Individual SHAP + Personalised Recommendations</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Analisis SHAP per Pelanggan & Rekomendasi Personal</div>', unsafe_allow_html=True)
 
             col_shap, col_rec = st.columns([1, 1])
             with col_shap:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Top SHAP Features (ranked)</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Fitur SHAP Teratas (Berdasarkan Peringkat)</div>', unsafe_allow_html=True)
                 st.markdown(shap_rows_html(result["shap_display"]), unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with col_rec:
                 st.markdown(
                     f'<div class="fin-card">'
-                    f'<div class="fin-card-hdr">Retention Recommendations · {segment_badge(seg)}</div>'
+                    f'<div class="fin-card-hdr">Rekomenasi Retensi · {segment_badge(seg)}</div>'
                     f'<div style="font-size:10px;color:#9AADC2;margin-bottom:10px;">'
                     f'Berdasarkan top 3 SHAP feature pelanggan ini</div>',
                     unsafe_allow_html=True,
@@ -594,7 +594,7 @@ with tab_new:
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            st.markdown('<div class="section-title">Demographic</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Informasi Demografi</div>', unsafe_allow_html=True)
             gender     = st.selectbox("Gender",         ["Female", "Male"])
             senior     = st.selectbox("Senior Citizen", ["No", "Yes"])
             partner    = st.selectbox("Partner",        ["No", "Yes"])
@@ -603,7 +603,7 @@ with tab_new:
             city         = st.selectbox("City", options=city_list, index=default_city)
 
         with c2:
-            st.markdown('<div class="section-title">Services</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Layanan</div>', unsafe_allow_html=True)
             phone_svc  = st.selectbox("Phone Service",     ["Yes", "No"])
             multi_lines= st.selectbox("Multiple Lines",     ["No", "Yes", "No phone service"])
             internet   = st.selectbox("Internet Service",   ["DSL", "Fiber optic", "No"])
@@ -615,7 +615,7 @@ with tab_new:
             stream_mov = st.selectbox("Streaming Movies",   ["No", "Yes", "No internet service"])
 
         with c3:
-            st.markdown('<div class="section-title">Account & Billing</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Akun dan Tagihan</div>', unsafe_allow_html=True)
             contract   = st.selectbox("Contract",          ["Month-to-month", "One year", "Two year"])
             paperless  = st.selectbox("Paperless Billing", ["Yes", "No"])
             payment    = st.selectbox("Payment Method",    [
@@ -628,7 +628,7 @@ with tab_new:
             cltv        = int(monthly_chg * 60)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("Predict Churn", use_container_width=True)
+        submitted = st.form_submit_button("Prediksi Churn", use_container_width=True)
 
     if submitted:
         input_row = pd.Series({
@@ -654,11 +654,11 @@ with tab_new:
         cs   = result["churn_score"]
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Prediction Result</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Hasil Prediksi</div>', unsafe_allow_html=True)
 
         col_g, col_d = st.columns([1, 1])
         with col_g:
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Probability</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Probabilitas Churn</div>', unsafe_allow_html=True)
             st.plotly_chart(
                 churn_score_gauge(cs, seg),
                 use_container_width=True,
@@ -674,7 +674,7 @@ with tab_new:
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col_d:
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Prediction Summary</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Ringkasan Prediksi</div>', unsafe_allow_html=True)
             st.markdown(prob_bar(prob), unsafe_allow_html=True)
             st.markdown(pred_box(prob, thr), unsafe_allow_html=True)
             st.markdown(
@@ -686,18 +686,18 @@ with tab_new:
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Individual SHAP + Personalised Recommendations</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Analisis SHAP per Pelanggan & Rekomendasi Personal</div>', unsafe_allow_html=True)
 
         col_shap, col_rec = st.columns([1, 1])
         with col_shap:
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Top SHAP Features (ranked)</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Fitur SHAP Teratas (Berdasarkan Peringkat) (ranked)</div>', unsafe_allow_html=True)
             st.markdown(shap_rows_html(result["shap_display"]), unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col_rec:
             st.markdown(
                 f'<div class="fin-card">'
-                f'<div class="fin-card-hdr">Retention Recommendations · {segment_badge(seg)}</div>'
+                f'<div class="fin-card-hdr">Rekomendasi Retensi · {segment_badge(seg)}</div>'
                 f'<div style="font-size:10px;color:#9AADC2;margin-bottom:10px;">'
                 f'Berdasarkan top 3 SHAP feature untuk profil ini</div>',
                 unsafe_allow_html=True,
@@ -722,7 +722,7 @@ with tab_bulk:
         """)
         template = pd.DataFrame(columns=["customerID"] + FEATURE_COLS)
         st.download_button(
-            "⬇ Download Template CSV",
+            "Unduh Template CSV",
             data=template.to_csv(index=False),
             file_name="fintel_bulk_template.csv",
             mime="text/csv",
@@ -730,7 +730,7 @@ with tab_bulk:
 
     st.markdown('<div class="section-title">Upload File</div>', unsafe_allow_html=True)
     uploaded = st.file_uploader(
-        "Upload CSV", type=["csv"],
+        "Unggah CSV", type=["csv"],
         label_visibility="collapsed",
         help="CSV dengan kolom sesuai format model FINTel",
     )
@@ -748,12 +748,12 @@ with tab_bulk:
             st.stop()
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Dataset Preview</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Preview Dataset</div>', unsafe_allow_html=True)
 
         m1, m2, m3 = st.columns(3)
         with m1:
             st.markdown(f"""<div class="metric-card">
-              <div class="metric-label">Total Rows</div>
+              <div class="metric-label">Total Baris</div>
               <div class="metric-value">{len(df_up):,}</div>
             </div>""", unsafe_allow_html=True)
         with m2:
@@ -773,7 +773,7 @@ with tab_bulk:
         st.dataframe(df_up.head(10), use_container_width=True, hide_index=True)
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        run_btn = st.button("Run Bulk Prediction", use_container_width=True)
+        run_btn = st.button("Jalankan Prediksi Secara Keseluruhan", use_container_width=True)
 
         if run_btn:
             with st.spinner("Menjalankan prediksi untuk semua customer..."):
@@ -788,22 +788,22 @@ with tab_bulk:
             mc1, mc2, mc3, mc4 = st.columns(4)
             with mc1:
                 st.markdown(f"""<div class="metric-card">
-                  <div class="metric-label">Total Customers</div>
+                  <div class="metric-label">Total Pelanggan </div>
                   <div class="metric-value">{n_total:,}</div>
                 </div>""", unsafe_allow_html=True)
             with mc2:
                 st.markdown(f"""<div class="metric-card">
-                  <div class="metric-label">Predicted Churn</div>
+                  <div class="metric-label">Diprediksi Akan Churn</div>
                   <div class="metric-value" style="color:#E74C3C;">{n_churn:,}</div>
                 </div>""", unsafe_allow_html=True)
             with mc3:
                 st.markdown(f"""<div class="metric-card">
-                  <div class="metric-label">Predicted No Churn</div>
+                  <div class="metric-label">Diprediksi Tidak Akan Churn</div>
                   <div class="metric-value" style="color:#27AE60;">{n_no_churn:,}</div>
                 </div>""", unsafe_allow_html=True)
             with mc4:
                 st.markdown(f"""<div class="metric-card">
-                  <div class="metric-label">Churn Rate</div>
+                  <div class="metric-label">Tingkat Churn</div>
                   <div class="metric-value" style="color:#E74C3C;">{churn_rate:.1f}%</div>
                 </div>""", unsafe_allow_html=True)
 
@@ -827,7 +827,7 @@ with tab_bulk:
                                 use_container_width=True, config={"displayModeBar": False})
 
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Prediction Result Table</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Tabel Hasil Prediksi</div>', unsafe_allow_html=True)
 
             display_cols = (
                 (["customerID"] if "customerID" in df_res.columns else []) +
@@ -884,7 +884,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align:center;padding:16px;border-top:1px solid rgba(15,29,61,0.08);
             font-size:11px;color:#9AADC2;">
-  FINTel Customer Churn Intelligence Dashboard <br>
+  FINTel Customer Churn Intelligence <br>
   Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 </div>
 """, unsafe_allow_html=True)
