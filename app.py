@@ -503,7 +503,7 @@ with tab_existing:
 
             col_g, col_d = st.columns([1, 1])
             with col_g:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Score</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Probability</div>', unsafe_allow_html=True)
                 st.plotly_chart(
                     churn_score_gauge(cs, seg),
                     use_container_width=True,
@@ -658,7 +658,7 @@ with tab_new:
 
         col_g, col_d = st.columns([1, 1])
         with col_g:
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Score</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Probability</div>', unsafe_allow_html=True)
             st.plotly_chart(
                 churn_score_gauge(cs, seg),
                 use_container_width=True,
@@ -678,7 +678,6 @@ with tab_new:
             st.markdown(prob_bar(prob), unsafe_allow_html=True)
             st.markdown(pred_box(prob, thr), unsafe_allow_html=True)
             st.markdown(
-                info_row("Churn Score",   str(cs)) +
                 info_row("Churn Segment", seg) +
                 info_row("Model",         "Logistic Regression") +
                 info_row("Threshold",     f"{thr:.4f}"),
