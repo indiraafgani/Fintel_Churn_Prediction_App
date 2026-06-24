@@ -36,8 +36,8 @@ def churn_score_gauge(score: int, segment: str) -> go.Figure:
         gauge={
             "axis": {
                 "range": [0, 100],
-                "tickvals": [0, 33, 67, 100],
-                "ticktext": ["0", "33", "67", "100"],
+                "tickvals": [0, 100],
+                "ticktext": ["0", "100"],
                 "tickfont": {"size": 10, "color": C_SOFT},
                 "tickwidth": 1, "tickcolor": C_SOFT,
             },
