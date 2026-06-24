@@ -118,7 +118,7 @@ html, body, [class*="css"] {
 .level-3           { background: #DBEAFE; color: #1E40AF; }
 
 [data-testid="stTabs"] [data-baseweb="tab-list"]  { background: white !important; border-radius: 10px !important; padding: 4px !important; box-shadow: 0 1px 4px rgba(15,29,61,0.06) !important; border: 1px solid rgba(15,29,61,0.06) !important; }
-[data-testid="stTabs"] [data-baseweb="tab"]       { border-radius: 7px !important; font-weight: 500 !important; font-size: 13px !important; color: var(--secondary) !important; padding: 7px 18px !important; }
+[data-testid="stTabs"] [data-baseweb="tab"]       { border-radius:7px !important; font-weight:500 !important; font-size:13px !important; color:var(--secondary) !important; padding:7px 18px !important; flex:1 !important; text-align:center !important; justify-content:center !important; }
 [data-testid="stTabs"] [aria-selected="true"]     { background: var(--primary) !important; color: white !important; }
 [data-testid="stButton"] > button                 { background: var(--primary) !important; color: white !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; font-size: 13px !important; }
 [data-testid="stButton"] > button:hover           { background: var(--secondary) !important; }
