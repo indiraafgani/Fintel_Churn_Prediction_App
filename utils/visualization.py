@@ -18,7 +18,10 @@ C_DANGER    = "#E74C3C"
 C_WARNING   = "#F39C12"
 C_SUCCESS   = "#27AE60"
 
-SEGMENT_COLORS = {"High": C_DANGER, "Mid": C_WARNING, "Low": C_SUCCESS}
+SEGMENT_COLORS = {
+    "High": C_DANGER, "Mid": C_WARNING, "Low": C_SUCCESS,
+    "Tinggi": C_DANGER, "Sedang": C_WARNING, "Rendah": C_SUCCESS,
+}
 
 _BASE = dict(
     paper_bgcolor=C_WHITE,
