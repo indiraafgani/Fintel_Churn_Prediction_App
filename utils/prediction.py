@@ -6,9 +6,9 @@ Prediction engine for FINTel Churn Intelligence Dashboard.
 Model   : Logistic Regression (CLASS_WEIGHT, best from benchmarking per notebook)
 SHAP    : LinearExplainer
 Encoding: OHE (drop='first') + TargetEncoder(City) + RobustScaler + SelectKBest(k=20)
-Segments: Low / Mid / High  (dari best_threshold, dibagi 3 sama rata di atas threshold)
+Segments: Rendah / Sedang / Tinggi (dari best_threshold, dibagi 3 sama rata di atas threshold)
 Recs    : CAMPAIGN_CATALOG — per feature × 3 tiers (high/medium/low)
-          mapped from top-3 SHAP features per individual customer
+          mapped from top-3 SHAP features yang mendorong churn (SHAP > 0) per customer
 CustomerID: from cell 42 of notebook — customer_ids = df['customerID'].copy()
 """
 
@@ -35,7 +35,7 @@ def prob_to_churnscore(prob: float, threshold: float) -> int:
 
 def get_churn_segment(score: int, threshold: float) -> str:
     """
-    Segmentasi Low / Mid / High berdasarkan best_threshold dari notebook.
+    Segmentasi Rendah / Sedang / Tinggi berdasarkan best_threshold dari notebook.
     Range di atas threshold dibagi 3 sama rata.
     """
     prob         = score / 100
@@ -254,13 +254,22 @@ def get_top3_recommendations(
     Given per-customer SHAP values (1D array) and feature names,
     return 3 personalised campaign recommendations.
 
-    Tier assignment (from notebook cell 186):
-        SHAP Rank #1 (biggest |SHAP|) -> tier 'high'   (50% budget, highest urgency)
-        SHAP Rank #2                  -> tier 'medium'  (35% budget)
-        SHAP Rank #3                  -> tier 'low'     (15% budget)
+    Sesuai notebook: hanya fitur yang mendorong churn (SHAP > 0) yang diambil.
+    Fallback ke magnitude tertinggi jika tidak ada fitur positif sama sekali.
+
+    Tier assignment:
+        Rank #1 (SHAP positif terbesar) -> tier 'high'   (50% budget)
+        Rank #2                         -> tier 'medium'  (35% budget)
+        Rank #3                         -> tier 'low'     (15% budget)
     """
-    abs_shap = np.abs(shap_values)
-    top3_idx = np.argsort(abs_shap)[::-1][:3]
+    # Ambil hanya fitur yang mendorong churn (SHAP > 0)
+    positive_idx = np.where(shap_values > 0)[0]
+    sorted_pos   = positive_idx[np.argsort(np.abs(shap_values[positive_idx]))[::-1]]
+    top3_idx     = sorted_pos[:3]
+
+    # Fallback kalau tidak ada fitur positif sama sekali
+    if len(top3_idx) == 0:
+        top3_idx = np.argsort(np.abs(shap_values))[::-1][:3]
 
     recs = []
     for rank, idx in enumerate(top3_idx, start=1):
@@ -304,7 +313,7 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     """
     Full inference for a single customer row.
     Returns: probability, churn_score, segment, prediction, threshold,
-             shap_display (top-8), recommendations (top-3 tiered).
+             shap_display (top-8 by abs), recommendations (top-3 SHAP positif).
     """
     model      = artifacts["model"]
     threshold  = artifacts["threshold"]
@@ -323,7 +332,7 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     sv_raw    = explainer.shap_values(X_sel)
     sv        = sv_raw[0]   # shape (n_features,)
 
-    # Top-8 for display (ranked by abs SHAP value)
+    # Top-8 untuk display (by abs SHAP value)
     top8_idx = np.argsort(np.abs(sv))[::-1][:8]
     shap_display = [
         {
@@ -334,7 +343,7 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
         for i in top8_idx
     ]
 
-    # Top-3 personalised recommendations
+    # Top-3 rekomendasi — hanya dari SHAP positif (mendorong churn)
     recs = get_top3_recommendations(sv, feat_names, seg)
 
     return {
