@@ -399,12 +399,12 @@ with tab_existing:
     with col_in:
         st.markdown('<div class="section-title">Customer Lookup</div>', unsafe_allow_html=True)
         cid_input = st.text_input(
-            "Customer ID", placeholder="e.g. CUST-00003",
+            "Customer ID", placeholder="e.g. 7216-EWTRS",
             label_visibility="collapsed",
         )
     with col_hint:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.caption("Masukkan Customer ID dari database. Format: **CUST-00001** s.d. **CUST-07032**")
+        st.caption("Masukkan Customer ID pelanggan dari dataset. Contoh: **7216-EWTRS**")
 
     if cid_input:
         cid   = cid_input.strip().upper()
@@ -556,8 +556,8 @@ with tab_existing:
           <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
             Masukkan Customer ID untuk melihat laporan churn analysis</div>
           <div style="font-size:12px;color:#9AADC2;">
-            Format: <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">CUST-00001</code>
-            sampai <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">CUST-07032</code>
+            Format: <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">7216-EWTRS</code>
+            sampai <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">3668-QPYBK</code>
           </div>
         </div>
         """, unsafe_allow_html=True)
