@@ -234,17 +234,15 @@ TIER_LEVEL_LABELS = {"high": "Priority action", "medium": "Supporting action", "
 def _match_catalog_key(feature_name: str) -> str:
     """
     Map an encoded feature name back to its CAMPAIGN_CATALOG key.
-    e.g. 'Contract_Two year' → 'Contract'
-         'InternetService_Fiber optic' → 'InternetService'
-         'tenure' → 'tenure'
+    e.g. 'Contract_Two year' -> 'Contract'
+         'InternetService_Fiber optic' -> 'InternetService'
+         'tenure' -> 'tenure'
     """
     for key in CAMPAIGN_CATALOG:
         if key == "_default":
             continue
-        # Exact match first
         if feature_name == key:
             return key
-        # Prefix match (encoded columns like 'Contract_One year')
         if feature_name.startswith(key + "_") or feature_name.startswith(key + " "):
             return key
     return "_default"
@@ -260,30 +258,30 @@ def get_top3_recommendations(
     return 3 personalised campaign recommendations.
 
     Tier assignment (from notebook cell 186):
-        SHAP Rank #1 (biggest |SHAP|) → tier 'high'   (50% budget, highest urgency)
-        SHAP Rank #2                  → tier 'medium'  (35% budget)
-        SHAP Rank #3                  → tier 'low'     (15% budget)
+        SHAP Rank #1 (biggest |SHAP|) -> tier 'high'   (50% budget, highest urgency)
+        SHAP Rank #2                  -> tier 'medium'  (35% budget)
+        SHAP Rank #3                  -> tier 'low'     (15% budget)
     """
-    abs_shap  = np.abs(shap_values)
-    top3_idx  = np.argsort(abs_shap)[::-1][:3]
+    abs_shap = np.abs(shap_values)
+    top3_idx = np.argsort(abs_shap)[::-1][:3]
 
     recs = []
     for rank, idx in enumerate(top3_idx, start=1):
         fname    = feature_names[idx]
         val      = float(shap_values[idx])
-        tier     = TIERS[rank - 1]           # rank1→high, rank2→medium, rank3→low
+        tier     = TIERS[rank - 1]
         cat_key  = _match_catalog_key(fname)
         campaign = CAMPAIGN_CATALOG.get(cat_key, CAMPAIGN_CATALOG["_default"])[tier]
         recs.append({
-            "rank":          rank,
-            "feature_name":  fname,
-            "catalog_key":   cat_key,
-            "shap_value":    round(val, 4),
-            "direction":     "up" if val > 0 else "down",
-            "tier":          tier,
-            "tier_label":    TIER_LABELS[tier],
-            "level_label":   TIER_LEVEL_LABELS[tier],
-            "campaign_name": campaign["nama"],
+            "rank":           rank,
+            "feature_name":   fname,
+            "catalog_key":    cat_key,
+            "shap_value":     round(val, 4),
+            "direction":      "up" if val > 0 else "down",
+            "tier":           tier,
+            "tier_label":     TIER_LABELS[tier],
+            "level_label":    TIER_LEVEL_LABELS[tier],
+            "campaign_name":  campaign["nama"],
             "recommendation": campaign["aksi"],
         })
     return recs
@@ -292,11 +290,16 @@ def get_top3_recommendations(
 # ─── Single-customer inference ────────────────────────────────────────────────
 
 def _transform_row(row: pd.Series, artifacts: Dict[str, Any]) -> np.ndarray:
-    """Preprocess one row through preprocessor → scaler → selector."""
-    prep  = artifacts["preprocessor"]
-    scaler= artifacts["scaler"]
-    sel   = artifacts["selector"]
-    X_row = pd.DataFrame([row[FEATURE_COLS]])
+    """
+    Preprocess one row through:
+    preprocessor (artifacts key) -> scaler -> selector
+    Keys 'preprocessor', 'scaler', 'selector' are saved in artifacts
+    and map to notebook pipeline steps 'transform', 'scaler', 'feature_select'.
+    """
+    prep   = artifacts["preprocessor"]
+    scaler = artifacts["scaler"]
+    sel    = artifacts["selector"]
+    X_row  = pd.DataFrame([row[FEATURE_COLS]])
     return sel.transform(scaler.transform(prep.transform(X_row)))
 
 
@@ -306,11 +309,11 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     Returns: probability, churn_score, segment, prediction, threshold,
              shap_display (top-8), recommendations (top-3 tiered).
     """
-    model     = artifacts["model"]
-    threshold = artifacts["threshold"]
-    feat_names= artifacts["selected_feature_names"]
-    clf       = model.named_steps["classifier"]
-    X_bg      = artifacts["X_background"]
+    model      = artifacts["model"]
+    threshold  = artifacts["threshold"]
+    feat_names = artifacts["selected_feature_names"]
+    clf        = model.named_steps["classifier"]
+    X_bg       = artifacts["X_background"]
 
     X_sel = _transform_row(row, artifacts)
     prob  = float(model.predict_proba(pd.DataFrame([row[FEATURE_COLS]]))[0, 1])
@@ -318,12 +321,12 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     seg   = get_churn_segment(cs)
     pred  = "Churn" if prob >= threshold else "No Churn"
 
-    # SHAP LinearRegression for this customer
+    # SHAP via LinearExplainer (Logistic Regression)
     explainer = shap.LinearExplainer(clf, X_bg)
     sv_raw    = explainer.shap_values(X_sel)
-    sv = sv_raw[0]
+    sv        = sv_raw[0]   # shape (n_features,)
 
-    # Top-8 for display
+    # Top-8 for display (ranked by abs SHAP value)
     top8_idx = np.argsort(np.abs(sv))[::-1][:8]
     shap_display = [
         {
@@ -348,13 +351,13 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# ─── Bulk inference (no per-row SHAP — too slow) ─────────────────────────────
+# ─── Bulk inference (no per-row SHAP) ────────────────────────────────────────
 
 def predict_bulk(df: pd.DataFrame, artifacts: Dict[str, Any]) -> pd.DataFrame:
     model     = artifacts["model"]
     threshold = artifacts["threshold"]
 
-    X = df[FEATURE_COLS].copy()
+    X      = df[FEATURE_COLS].copy()
     probs  = model.predict_proba(X)[:, 1]
     scores = [prob_to_churnscore(p, threshold) for p in probs]
     segs   = [get_churn_segment(s) for s in scores]
