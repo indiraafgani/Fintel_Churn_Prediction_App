@@ -176,6 +176,15 @@ def load_ref_data():
 
 ref_data = load_ref_data()
 
+@st.cache_data
+def load_city_list():
+    try:
+        df_cities = pd.read_csv("data/df_clean.csv")
+        return sorted(df_cities["City"].dropna().unique().tolist())
+    except Exception:
+        return ["Los Angeles", "San Diego", "San Jose", "San Francisco"]
+
+city_list = load_city_list()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HTML HELPERS
@@ -594,8 +603,8 @@ with tab_new:
             senior     = st.selectbox("Senior Citizen", ["No", "Yes"])
             partner    = st.selectbox("Partner",        ["No", "Yes"])
             dependents = st.selectbox("Dependents",     ["No", "Yes"])
-            city       = st.text_input("City", value="Los Angeles",
-                                       help="Nama kota pelanggan (digunakan untuk TargetEncoding)")
+            default_city = city_list.index("Los Angeles") if "Los Angeles" in city_list else 0
+            city         = st.selectbox("City", options=city_list, index=default_city)
 
         with c2:
             st.markdown('<div class="section-title">Services</div>', unsafe_allow_html=True)
