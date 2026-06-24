@@ -1,8 +1,9 @@
 """
-FINTel — Customer Churn Intelligence Dashboard
-Model    : Logistic Regression (CLASS_WEIGHT, best from benchmarking per notebook)
-Churn Segment: Low / Mid / High (dari best_threshold, dibagi 3 sama rata di atas threshold)
-Recommendations: per-feature, 3 tiers keyed to top-3 SHAP.
+FINTel — Sistem Prediksi Churn Pelanggan
+
+Model                : Logistic Regression (model terbaik berdasarkan proses benchmarking)
+Segmentasi Risiko    : Rendah • Sedang • Tinggi
+Rekomendasi Retensi  : Dipersonalisasi berdasarkan 3 faktor utama yang memengaruhi prediksi (SHAP)
 """
 
 import io
