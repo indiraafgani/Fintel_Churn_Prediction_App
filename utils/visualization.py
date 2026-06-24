@@ -24,7 +24,6 @@ _BASE = dict(
     paper_bgcolor=C_WHITE,
     plot_bgcolor=C_WHITE,
     font=dict(family="Inter, sans-serif", color=C_NAVY),
-    margin=dict(l=16, r=16, t=40, b=16),
 )
 
 
@@ -52,8 +51,7 @@ def churn_score_gauge(score: int, segment: str) -> go.Figure:
             "threshold": {"line": {"color": color, "width": 3}, "thickness": 0.85, "value": score},
         },
     ))
-    fig.update_layout(height=230, **_BASE) 
-    fig.update_layout(margin=dict(l=20, r=20, t=30, b=10))
+    fig.update_layout(height=230, margin=dict(l=20, r=20, t=30, b=10), **_BASE)
     return fig
 
 
@@ -72,12 +70,11 @@ def shap_individual_bar(shap_display: List[Dict], title: str = "Individual SHAP 
     ))
     fig.update_layout(
         title=dict(text=title, font=dict(size=12, color=C_PRIMARY), x=0),
-        height=320, **_BASE,
+        height=320, margin=dict(l=10, r=80, t=40, b=16), **_BASE,
         xaxis=dict(showgrid=True, gridcolor=C_BG, zeroline=True,
                    zerolinecolor=C_SOFT, zerolinewidth=1,
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(showgrid=False, tickfont=dict(size=11, color=C_NAVY)),
-        margin=dict(l=10, r=80, t=40, b=16),
     )
     return fig
 
@@ -96,11 +93,10 @@ def shap_global_bar(global_importance: List[tuple], top_n: int = 10) -> go.Figur
     ))
     fig.update_layout(
         title=dict(text="Global Feature Importance (mean |SHAP|)", font=dict(size=12, color=C_PRIMARY), x=0),
-        height=340, **_BASE,
+        height=340, margin=dict(l=10, r=80, t=40, b=16), **_BASE,
         xaxis=dict(showgrid=True, gridcolor=C_BG, zeroline=False,
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(showgrid=False, tickfont=dict(size=11, color=C_NAVY)),
-        margin=dict(l=10, r=80, t=40, b=16),
     )
     return fig
 
@@ -118,6 +114,7 @@ def churn_distribution_donut(n_churn: int, n_no_churn: int) -> go.Figure:
     fig.update_layout(
         title=dict(text="Churn vs No Churn", font=dict(size=13, color=C_PRIMARY), x=0.5),
         height=280, showlegend=True,
+        margin=dict(l=16, r=16, t=40, b=16),
         legend=dict(orientation="h", yanchor="bottom", y=-0.18,
                     xanchor="center", x=0.5, font=dict(size=11)),
         **_BASE,
@@ -142,7 +139,7 @@ def segment_bar(df: pd.DataFrame) -> go.Figure:
     ))
     fig.update_layout(
         title=dict(text="Churn Segment Distribution", font=dict(size=13, color=C_PRIMARY), x=0.5),
-        height=280, **_BASE,
+        height=280, margin=dict(l=16, r=16, t=40, b=16), **_BASE,
         xaxis=dict(showgrid=False, tickfont=dict(size=12, color=C_NAVY)),
         yaxis=dict(showgrid=True, gridcolor=C_BG, tickfont=dict(size=10, color=C_SOFT)),
     )
@@ -170,7 +167,7 @@ def probability_histogram(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         barmode="overlay",
         title=dict(text="Churn Probability Distribution", font=dict(size=13, color=C_PRIMARY), x=0.5),
-        height=280, **_BASE,
+        height=280, margin=dict(l=16, r=16, t=40, b=16), **_BASE,
         xaxis=dict(title="Probability", showgrid=True, gridcolor=C_BG,
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(title="Count", showgrid=True, gridcolor=C_BG,
@@ -195,7 +192,7 @@ def churn_score_histogram(df: pd.DataFrame) -> go.Figure:
                       annotation_font_color=color)
     fig.update_layout(
         title=dict(text="Churn Score Distribution", font=dict(size=13, color=C_PRIMARY), x=0.5),
-        height=280, **_BASE,
+        height=280, margin=dict(l=16, r=16, t=40, b=16), **_BASE,
         xaxis=dict(title="Churn Score", showgrid=True, gridcolor=C_BG,
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(title="Count", showgrid=True, gridcolor=C_BG,
