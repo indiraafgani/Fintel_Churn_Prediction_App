@@ -321,15 +321,15 @@ with st.sidebar:
       <div class="seg-legend-row" style="margin-top:6px;">
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#27AE60;"></div>
-          <span>Low (0–33)</span>
+          <span>Low</span>
         </div>
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#F39C12;"></div>
-          <span>Mid (34–66)</span>
+          <span>Mid</span>
         </div>
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#E74C3C;"></div>
-          <span>High (67–100)</span>
+          <span>High</span>
         </div>
       </div>
     </div>
@@ -512,7 +512,7 @@ with tab_existing:
                 st.markdown(
                     f'<div style="text-align:center;margin-top:-10px;">'
                     f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
-                    f'Piecewise Scaler · Low 0–33 | Mid 34–66 | High 67–100</div>'
+                    f'Churn Probability × 100 · Low · Mid · High</div>'
                     f'<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">'
                     f'<span class="badge b-low" style="font-size:9px;">Low (0–33)</span>'
                     f'<span class="badge b-mid" style="font-size:9px;">Mid (34–66)</span>'
@@ -671,7 +671,7 @@ with tab_new:
             st.markdown(
                 f'<div style="text-align:center;margin-top:-10px;">'
                 f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
-                f'Piecewise Scaler · Low 0–33 | Mid 34–66 | High 67–100</div>'
+                f'Churn Probability × 100 · Low · Mid · High</div>'
                 f'<div style="margin-top:6px;">{segment_badge(seg)}</div></div>',
                 unsafe_allow_html=True,
             )
