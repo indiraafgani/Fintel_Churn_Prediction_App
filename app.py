@@ -328,8 +328,6 @@ with st.sidebar:
 
     st.markdown('<div class="sb-section">Evaluation Metrics</div>', unsafe_allow_html=True)
     for k, v in [
-        ("Recall",    metrics["recall"]),
-        ("Precision", metrics["precision"]),
         ("F2 (β=2)",  metrics["f2"]),
         ("ROC-AUC",   metrics["roc_auc"]),
         ("Threshold", metrics["threshold"]),
