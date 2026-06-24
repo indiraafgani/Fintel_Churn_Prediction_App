@@ -385,17 +385,10 @@ with tab_existing:
 
     col_in, col_hint = st.columns([2, 3])
     with col_in:
-        st.markdown('<div class="section-title">Customer Lookup</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Masukkan Customer ID</div>', unsafe_allow_html=True)
         cid_input = st.text_input(
             "Customer ID", placeholder="Contoh: 7216-EWTRS",
             label_visibility="collapsed",
-        )
-    with col_hint:
-        st.markdown(
-            '<div style="padding-top:32px;font-size:12px;color:#6B7280;">'
-            'Masukkan Customer ID. Contoh: 7216-EWTRS'
-            '<strong>7216-EWTRS</strong></div>',
-            unsafe_allow_html=True,
         )
 
     if cid_input:
