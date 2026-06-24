@@ -354,7 +354,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-footer">
-      FINTel Capstone · Purwadhika 2026<br>
+      FINTel <br>
       Akbar K. · Khaerun N. · Indira F.A.
     </div>
     """, unsafe_allow_html=True)
@@ -863,7 +863,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align:center;padding:16px;border-top:1px solid rgba(15,29,61,0.08);
             font-size:11px;color:#9AADC2;">
-  FINTel Customer Churn Intelligence Dashboard · Purwadhika Digital Technology School 2026<br>
+  FINTel Customer Churn Intelligence Dashboard <br>
   Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 </div>
 """, unsafe_allow_html=True)
