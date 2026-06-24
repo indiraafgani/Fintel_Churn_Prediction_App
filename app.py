@@ -636,8 +636,8 @@ with tab_new:
             "StreamingMovies": stream_mov, "Contract": contract,
             "PaperlessBilling": paperless, "PaymentMethod": payment,
             "MonthlyCharges": float(monthly_chg),
-            "TotalCharges": float(total_chg),
-            "CLTV": float(cltv),
+            "TotalCharges":   float(total_chg),
+            "City":           city,
         })
 
         with st.spinner("Menghitung SHAP values..."):
