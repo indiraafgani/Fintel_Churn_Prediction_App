@@ -354,7 +354,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-footer">
-      FINTel Capstone · Purwadhika 2026<br>
+      FINTel <br>
       Akbar K. · Khaerun N. · Indira F.A.
     </div>
     """, unsafe_allow_html=True)
@@ -385,14 +385,11 @@ with tab_existing:
 
     col_in, col_hint = st.columns([2, 3])
     with col_in:
-        st.markdown('<div class="section-title">Customer Lookup</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Masukkan Customer ID</div>', unsafe_allow_html=True)
         cid_input = st.text_input(
             "Customer ID", placeholder="e.g. 7216-EWTRS",
             label_visibility="collapsed",
         )
-    with col_hint:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.caption("Masukkan Customer ID yang ada di database. Contoh: **CUST-00001** hingga **CUST-07032**")
 
     if cid_input:
         cid = cid_input.strip().upper()
@@ -863,7 +860,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align:center;padding:16px;border-top:1px solid rgba(15,29,61,0.08);
             font-size:11px;color:#9AADC2;">
-  FINTel Customer Churn Intelligence Dashboard · Purwadhika Digital Technology School 2026<br>
+  FINTel Customer Churn Intelligence Dashboard <br>
   Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 </div>
 """, unsafe_allow_html=True)
