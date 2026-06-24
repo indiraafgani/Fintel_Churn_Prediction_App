@@ -6,7 +6,7 @@ Prediction engine for FINTel Churn Intelligence Dashboard.
 Model   : Logistic Regression (CLASS_WEIGHT, best from benchmarking per notebook)
 SHAP    : LinearExplainer
 Encoding: OHE (drop='first') + TargetEncoder(City) + RobustScaler + SelectKBest(k=20)
-Segments: Low / Mid / High  (ChurnScore 0–100, thresholds at 33 / 67)
+Segments: Low / Mid / High  (dari best_threshold, dibagi 3 sama rata di atas threshold)
 Recs    : CAMPAIGN_CATALOG — per feature × 3 tiers (high/medium/low)
           mapped from top-3 SHAP features per individual customer
 CustomerID: from cell 42 of notebook — customer_ids = df['customerID'].copy()
@@ -26,33 +26,30 @@ FEATURE_COLS: List[str] = [
     "MonthlyCharges", "TotalCharges", "City",
 ]
 
-# ─── Churn segment thresholds ─────────────────────────────────────────────────
-SEGMENT_LOW_MAX  = 33   # ≤ 33  → Low
-SEGMENT_HIGH_MIN = 67   # ≥ 67  → High  (34–66 → Mid)
-
-
-# ─── Piecewise ChurnScore scaler: probability [0,1] → score [0,100] ──────────
+# ─── Segmentasi Churn ──────────
 def prob_to_churnscore(prob: float, threshold: float) -> int:
     """
-    Piecewise linear: prob=0→0, prob=threshold→50, prob=1→100
+    Konversi probability ke ChurnScore 0–100 (prob × 100).
     """
-    if threshold <= 0 or threshold >= 1:
-        return int(np.clip(round(prob * 100), 0, 100))
-    pivot = 50
-    if prob <= threshold:
-        score = (prob / threshold) * pivot
-    else:
-        score = pivot + ((prob - threshold) / (1 - threshold)) * (100 - pivot)
-    return int(np.clip(round(score), 0, 100))
+    return int(np.clip(round(prob * 100), 0, 100))
 
+def get_churn_segment(score: int, threshold: float) -> str:
+    """
+    Segmentasi Low / Mid / High berdasarkan best_threshold dari notebook.
+    Range di atas threshold dibagi 3 sama rata.
+    """
+    prob         = score / 100
+    segment_size = (1 - threshold) / 3
+    low_limit    = threshold + segment_size
+    medium_limit = threshold + (2 * segment_size)
 
-def get_churn_segment(score: int) -> str:
-    if score >= SEGMENT_HIGH_MIN:
-        return "High"
-    elif score > SEGMENT_LOW_MAX:
+    if prob < threshold:
+        return "Low"
+    elif prob < low_limit:
+        return "Low"
+    elif prob < medium_limit:
         return "Mid"
-    return "Low"
-
+    return "High"
 
 # ─── Campaign Catalog — per feature × 3 tiers (from notebook cell 187) ───────
 CAMPAIGN_CATALOG: Dict[str, Dict[str, Dict[str, str]]] = {
@@ -318,7 +315,7 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     X_sel = _transform_row(row, artifacts)
     prob  = float(model.predict_proba(pd.DataFrame([row[FEATURE_COLS]]))[0, 1])
     cs    = prob_to_churnscore(prob, threshold)
-    seg   = get_churn_segment(cs)
+    seg   = get_churn_segment(cs, threshold)
     pred  = "Churn" if prob >= threshold else "No Churn"
 
     # SHAP via LinearExplainer (Logistic Regression)
@@ -360,7 +357,7 @@ def predict_bulk(df: pd.DataFrame, artifacts: Dict[str, Any]) -> pd.DataFrame:
     X      = df[FEATURE_COLS].copy()
     probs  = model.predict_proba(X)[:, 1]
     scores = [prob_to_churnscore(p, threshold) for p in probs]
-    segs   = [get_churn_segment(s) for s in scores]
+    segs   = [get_churn_segment(s, threshold) for s in scores]
     labels = ["Churn" if p >= threshold else "No Churn" for p in probs]
 
     result = df.copy()
