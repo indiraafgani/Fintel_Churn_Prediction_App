@@ -545,9 +545,9 @@ with tab_existing:
             Masukkan Customer ID untuk melihat laporan churn analysis</div>
           <div style="font-size:12px;color:#9AADC2;">
             Format: <code style="background:#EBECEF;padding:2px 8px;
-            border-radius:4px;color:#1A3462;">CUST-00001</code> sampai
+            border-radius:4px;color:#1A3462;">7590-VHVEG</code> sampai
             <code style="background:#EBECEF;padding:2px 8px;
-            border-radius:4px;color:#1A3462;">CUST-07032</code></div>
+            border-radius:4px;color:#1A3462;">7216-EWTRS</code></div>
         </div>
         """, unsafe_allow_html=True)
 
