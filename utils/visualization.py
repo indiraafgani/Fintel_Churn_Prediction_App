@@ -52,7 +52,8 @@ def churn_score_gauge(score: int, segment: str) -> go.Figure:
             "threshold": {"line": {"color": color, "width": 3}, "thickness": 0.85, "value": score},
         },
     ))
-    fig.update_layout(height=230, **_BASE, margin=dict(l=20, r=20, t=30, b=10))
+    fig.update_layout(height=230, **_BASE) 
+    fig.update_layout(margin=dict(l=20, r=20, t=30, b=10))
     return fig
 
 
