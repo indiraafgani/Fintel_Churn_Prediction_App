@@ -1,79 +1,80 @@
-# 🔷 FINTel — Customer Churn Intelligence Dashboard
+# FINTel — Sistem Prediksi Churn Pelanggan
 
-> ML-powered churn prediction, Low/Mid/High segmentation & SHAP-based personalised retention recommendations
+> Prediksi churn berbasis Machine Learning & rekomendasi retensi personal berdasarkan SHAP per individu
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 
-**Capstone Project** — Purwadhika Digital Technology School · Data Science, ML & AI Bootcamp  
-**Tim:** Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
+**Final Project** — Purwadhika Digital Technology School · Data Science, ML & AI Bootcamp  
+**Anggota:** Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 
 ---
 
-## 📋 Project Overview
+## Project Overview
 
-FINTel Churn Intelligence Dashboard memprediksi kemungkinan churn pelanggan telekomunikasi menggunakan **Logistic Regression** yang dioptimasi dengan **F2-Score (β=2)**. Hasil prediksi disajikan dalam tiga segmen churn (Low/Mid/High) beserta rekomendasi retensi yang dipersonalisasi berdasarkan **SHAP per individu**.
+FINTel adalah dashboard prediksi churn pelanggan telekomunikasi menggunakan **Logistic Regression** yang dioptimasi dengan **F2-Score (β=2)**. Setiap prediksi disertai segmentasi risiko (Rendah / Sedang / Tinggi) dan **3 rekomendasi campaign retensi yang dipersonalisasi** berdasarkan Top-3 SHAP features per individu.
 
 ---
 
-## ✨ Features
+## Features
 
-### 🔍 Existing Customer
-- Lookup pelanggan by Customer ID dari database
-- Laporan lengkap: demografi, layanan, billing, CLTV
-- Churn Score (0–100), Churn Segment (Low/Mid/High)
-- Top SHAP features ranked (rank badge merah/kuning/biru untuk top 3)
-- **Rekomendasi retensi 3 tier** — otomatis sesuai top-3 SHAP per individu
+### Pelanggan Lama
+- Lookup pelanggan berdasarkan Customer ID dari database
+- Laporan lengkap: Ringkasan Pelanggan, Informasi Akun, Informasi Pembayaran, Layanan Tambahan (Add-On)
+- Churn Probability & segmentasi risiko (Rendah / Sedang / Tinggi)
+- Top SHAP features ranked — rank badge merah/kuning/biru untuk top 3
+- **3 rekomendasi campaign retensi** dipersonalisasi dari top-3 SHAP per individu
 
-### ➕ New Customer
-- Form input 20 fitur lengkap
+### Pelanggan Baru
+- Form input: Informasi Demografi, Layanan, Akun dan Tagihan
+- City autocomplete dari database (ketik sebagian nama kota, langsung muncul pilihan)
 - Prediksi real-time dengan SHAP individual
-- Rekomendasi tiered identik dengan Existing Customer
+- Rekomendasi campaign identik dengan Pelanggan Lama
 
-### 📂 Bulk Prediction
+### Prediksi Secara Keseluruhan (CSV)
 - Upload CSV massal
-- 4 metric cards (Total, Churn, No Churn, Churn Rate)
-- 4 visualisasi: Donut, Segment Bar, Probability Histogram, Score Histogram
+- 4 metric cards: Total, Churn, No Churn, Churn Rate
+- 4 visualisasi: Donut Chart, Segment Bar, Probability Histogram, Score Histogram
 - Tabel hasil berwarna + Download CSV
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-### Model
+### Model Pipeline
 ```
 Raw CSV (20 features)
-  └── ImbPipeline:
+  └── Pipeline:
         ColumnTransformer
-          ├── OneHotEncoder (drop='first')   → binary categorical
-          └── BinaryEncoder                  → multi-category
+          ├── OneHotEncoder (drop='first')  → 16 kolom kategorikal
+          └── TargetEncoder                 → City
         → RobustScaler
         → SelectKBest (k=20, ANOVA F-test)
-        → SMOTE (resampling)
-        → LogisticRegression (C=1, saga, balanced)
-        → Threshold (F2-Score β=2 optimized)
-        → Piecewise Scaler → ChurnScore 0–100
+        → LogisticRegression (CLASS_WEIGHT='balanced')
+        → Threshold Optimization (F2-Score β=2)
 ```
 
-### Churn Segmentation
-| Segment | Churn Score | Warna |
-|---------|-------------|-------|
-| 🟢 Low  | 0 – 33      | Hijau |
-| 🟡 Mid  | 34 – 66     | Kuning |
-| 🔴 High | 67 – 100    | Merah |
+### Segmentasi Risiko Churn
+Segmentasi berdasarkan `best_threshold` dari model, dibagi 3 sama rata di atas threshold:
+
+| Segmen | Range Probability | Warna |
+|--------|-------------------|-------|
+| Rendah | prob < threshold | Hijau |
+| Sedang | threshold – threshold + ⅓(1–threshold) | Kuning |
+| Tinggi | threshold + ⅔(1–threshold) – 1.0 | Merah |
 
 ### Recommendation Logic
 ```
 Top-3 SHAP features (by |SHAP value|) per customer
-  └── Rank 1 → FEATURE_REC_MAP[feature]["1"]  →  Priority action   🔴
-  └── Rank 2 → FEATURE_REC_MAP[feature]["2"]  →  Supporting action 🟡
-  └── Rank 3 → FEATURE_REC_MAP[feature]["3"]  →  Additional action 🔵
+  └── Rank 1 (SHAP terbesar) → Campaign HIGH    → Priority action   (50% budget)
+  └── Rank 2                 → Campaign MEDIUM  → Supporting action (35% budget)
+  └── Rank 3                 → Campaign LOW     → Additional action (15% budget)
 ```
-Setiap fitur memiliki 3 rekomendasi unik. Rank menentukan level urgency.
+Setiap fitur memiliki 3 campaign unik dari `CAMPAIGN_CATALOG`. Rank menentukan tingkat urgensi dan alokasi budget retensi.
 
 ---
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 fintel-churn-app/
@@ -88,11 +89,11 @@ fintel-churn-app/
 │
 ├── utils/
 │   ├── __init__.py
-│   ├── prediction.py        # Inference, segmentation, SHAP recs
+│   ├── prediction.py        # Inference, segmentasi, SHAP recs, CAMPAIGN_CATALOG
 │   └── visualization.py     # Plotly charts
 │
 ├── data/
-│   └── df_clean.csv         # Reference database (with CustomerID)
+│   └── df_clean.csv         # Reference database (dengan customerID & City)
 │
 └── .streamlit/
     └── config.toml          # Theme config
@@ -100,7 +101,7 @@ fintel-churn-app/
 
 ---
 
-## 🚀 Running Locally
+## Running Locally
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/fintel-churn-app.git
@@ -115,7 +116,7 @@ streamlit run app.py
 
 ---
 
-## ☁️ Deploy to Streamlit Cloud
+## Deploy to Streamlit Cloud
 
 ```bash
 # 1. Push to GitHub
@@ -123,36 +124,21 @@ git init && git add . && git commit -m "FINTel deploy"
 git remote add origin https://github.com/YOUR_USERNAME/fintel-churn-app.git
 git push -u origin main
 
-# 2. go to share.streamlit.io → New App → select repo → main file: app.py → Deploy
+# 2. Buka share.streamlit.io → New App → pilih repo → main file: app.py → Deploy
 ```
 
-> ⚠️ Pastikan `models/artifacts.pkl` dan `data/df_clean.csv` ikut ter-commit ke repo.
+> Pastikan `models/artifacts.pkl` dan `data/df_clean.csv` ikut ter-commit ke repo.
 
 ---
 
-## 📊 Model Performance
+## Model Performance
 
-| Metric    | Value  |
-|-----------|--------|
-| Recall    | ~0.904 |
-| Precision | ~0.572 |
-| F2 (β=2) | ~0.756 |
-| ROC-AUC   | ~0.847 |
+| Metric | Value |
+|--------|-------|
+| F2 (β=2) | ~0.75 |
+| ROC-AUC | ~0.85 |
+| Threshold | ~0.37 |
 
-Threshold dioptimasi F2-Score: Recall diprioritaskan 4× di atas Precision.
-
----
-
-## 🎨 Color Palette
-
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Background | `#EBECEF` | App background |
-| Navy | `#0F1D3D` | Text, topbar |
-| Primary | `#1A3462` | Sidebar, buttons |
-| Secondary | `#476996` | Accents |
-| Soft | `#9AADC2` | Muted elements |
+Threshold dioptimasi menggunakan F2-Score (β=2): Recall diprioritaskan 4× di atas Precision, sesuai asumsi bisnis bahwa biaya kehilangan pelanggan jauh lebih tinggi dari biaya intervensi retensi.
 
 ---
-
-*Built with ❤️ — Purwadhika 2024*
