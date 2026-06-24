@@ -387,7 +387,7 @@ with tab_existing:
     with col_in:
         st.markdown('<div class="section-title">Customer Lookup</div>', unsafe_allow_html=True)
         cid_input = st.text_input(
-            "Customer ID", placeholder="e.g. 7216-EWTRS",
+            "Customer ID", placeholder="Contoh: 7216-EWTRS",
             label_visibility="collapsed",
         )
     with col_hint:
