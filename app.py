@@ -1,7 +1,7 @@
 """
 FINTel — Customer Churn Intelligence Dashboard
-Single unified Logistic Regression model.
-Churn Segment: Low / Mid / High (binned from ChurnScore).
+Model    : Logistic Regression (CLASS_WEIGHT, best from benchmarking per notebook)
+Churn Segment: Low / Mid / High (dari best_threshold, dibagi 3 sama rata di atas threshold)
 Recommendations: per-feature, 3 tiers keyed to top-3 SHAP.
 """
 
@@ -317,7 +317,7 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Churn Segmentation</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
-      <div class="sb-pill-l">Binning dari ChurnScore</div>
+      <div class="sb-pill-l">Churn Segmentation</div>
       <div class="seg-legend-row" style="margin-top:6px;">
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#27AE60;"></div>
@@ -514,9 +514,6 @@ with tab_existing:
                     f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
                     f'Churn Probability × 100 · Low · Mid · High</div>'
                     f'<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">'
-                    f'<span class="badge b-low" style="font-size:9px;">Low (0–33)</span>'
-                    f'<span class="badge b-mid" style="font-size:9px;">Mid (34–66)</span>'
-                    f'<span class="badge b-high" style="font-size:9px;">High (67–100)</span>'
                     f'</div>'
                     f'<div style="margin-top:8px;">{segment_badge(seg)}</div>'
                     f'</div>',
@@ -529,7 +526,6 @@ with tab_existing:
                 st.markdown(prob_bar(prob), unsafe_allow_html=True)
                 st.markdown(pred_box(prob, thr), unsafe_allow_html=True)
                 st.markdown(
-                    info_row("Churn Score",   str(cs)) +
                     info_row("Churn Segment", seg) +
                     info_row("Model",         "Logistic Regression") +
                     info_row("Threshold",     f"{thr:.4f}"),
