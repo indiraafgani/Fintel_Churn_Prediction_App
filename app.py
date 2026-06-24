@@ -391,7 +391,6 @@ with tab_existing:
             label_visibility="collapsed",
         )
     with col_hint:
-        st.markdown("<br>", unsafe_allow_html=True)
         st.caption("Masukkan Customer ID. Contoh: **7216-EWTRS**")
 
     if cid_input:
