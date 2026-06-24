@@ -2,7 +2,7 @@
 
 > Prediksi churn berbasis Machine Learning & rekomendasi retensi personal berdasarkan SHAP per individu
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://fintelchurnpredictionapp-01.streamlit.app/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 
 **Final Project** — Purwadhika Digital Technology School · Data Science, ML & AI Bootcamp  
