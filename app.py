@@ -392,7 +392,7 @@ with tab_existing:
         )
     with col_hint:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.caption("Masukkan Customer ID yang ada di database. Contoh: **CUST-00001** hingga **CUST-07032**")
+        st.caption("Masukkan Customer ID. Contoh: **7216-EWTRS**")
 
     if cid_input:
         cid = cid_input.strip().upper()
