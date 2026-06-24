@@ -391,7 +391,12 @@ with tab_existing:
             label_visibility="collapsed",
         )
     with col_hint:
-        st.caption("Masukkan Customer ID. Contoh: **7216-EWTRS**")
+        st.markdown(
+            '<div style="padding-top:32px;font-size:12px;color:#6B7280;">'
+            'Masukkan Customer ID. Contoh: 7216-EWTRS'
+            '<strong>7216-EWTRS</strong></div>',
+            unsafe_allow_html=True,
+        )
 
     if cid_input:
         cid = cid_input.strip().upper()
