@@ -353,7 +353,7 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Tujuan Bisnis </div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.65;padding:0 2px;">
-      Prediksi churn pelanggan dan berikan rekomendasi retensi personal
+      Prediksi churn pelanggan dan merekomendasikan retensi personal
       berbasis Top-3 SHAP features per individu.
     </div>
     """, unsafe_allow_html=True)
