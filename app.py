@@ -343,9 +343,8 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Business Objective</div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.65;padding:0 2px;">
-      Menekan churn FINTel dengan intervensi retensi berbasis SHAP per individu,
-      meminimalkan False Negative (F2-Score β=2), dan memberikan rekomendasi
-      bertingkat sesuai kontribusi fitur tertinggi.
+      Prediksi churn pelanggan dan berikan rekomendasi retensi personal
+      berbasis Top-3 SHAP features per individu.
     </div>
     """, unsafe_allow_html=True)
 
