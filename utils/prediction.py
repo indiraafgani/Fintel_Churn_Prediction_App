@@ -44,12 +44,12 @@ def get_churn_segment(score: int, threshold: float) -> str:
     medium_limit = threshold + (2 * segment_size)
 
     if prob < threshold:
-        return "Low"
+        return "Rendah"
     elif prob < low_limit:
-        return "Low"
+        return "Rendah"
     elif prob < medium_limit:
-        return "Mid"
-    return "High"
+        return "Sedang"
+    return "Tinggi"
 
 # ─── Campaign Catalog — per feature × 3 tiers (from notebook cell 187) ───────
 CAMPAIGN_CATALOG: Dict[str, Dict[str, Dict[str, str]]] = {
