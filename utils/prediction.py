@@ -3,8 +3,8 @@ utils/prediction.py
 ===================
 Prediction engine for FINTel Churn Intelligence Dashboard.
 
-Model   : XGBoost (best from benchmarking per notebook)
-SHAP    : TreeExplainer
+Model   : Logistic Regression (CLASS_WEIGHT, best from benchmarking per notebook)
+SHAP    : LinearExplainer
 Encoding: OHE (drop='first') + TargetEncoder(City) + RobustScaler + SelectKBest(k=20)
 Segments: Low / Mid / High  (ChurnScore 0–100, thresholds at 33 / 67)
 Recs    : CAMPAIGN_CATALOG — per feature × 3 tiers (high/medium/low)
@@ -318,12 +318,10 @@ def predict_single(row: pd.Series, artifacts: Dict[str, Any]) -> Dict[str, Any]:
     seg   = get_churn_segment(cs)
     pred  = "Churn" if prob >= threshold else "No Churn"
 
-    # SHAP TreeExplainer for this customer
-    explainer = shap.TreeExplainer(clf)
+    # SHAP LinearRegression for this customer
+    explainer = shap.LinearExplainer(clf, X_bg)
     sv_raw    = explainer.shap_values(X_sel)
-    if isinstance(sv_raw, list):
-        sv_raw = sv_raw[1]
-    sv = sv_raw[0]   # shape (n_features,)
+    sv = sv_raw[0]
 
     # Top-8 for display
     top8_idx = np.argsort(np.abs(sv))[::-1][:8]
