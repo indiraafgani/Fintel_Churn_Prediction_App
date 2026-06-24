@@ -621,7 +621,6 @@ with tab_new:
             monthly_chg = st.number_input("Monthly Charges ($)", min_value=18.0, max_value=120.0, value=65.0, step=0.5)
             total_chg   = round(monthly_chg * max(int(tenure), 1), 2)
             cltv        = int(monthly_chg * 60)
-            st.caption(f"Est. Total Charges: **${total_chg:,.2f}** · Est. CLTV: **${cltv:,}**")
 
         st.markdown("<br>", unsafe_allow_html=True)
         submitted = st.form_submit_button("Predict Churn", use_container_width=True)
