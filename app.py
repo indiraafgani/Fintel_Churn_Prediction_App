@@ -192,7 +192,7 @@ city_list = load_city_list()
 # ─────────────────────────────────────────────────────────────────────────────
 
 def segment_badge(seg: str) -> str:
-    cls = {"High": "b-high", "Mid": "b-mid", "Low": "b-low"}.get(seg, "b-low")
+    cls = {"Tinggi": "b-tinggi", "Sedang": "b-sedang", "Rendah": "b-rendah"}.get(seg, "b-rendah")
     return f'<span class="badge {cls}">{seg} Churn</span>'
 
 
@@ -322,15 +322,15 @@ with st.sidebar:
       <div class="seg-legend-row" style="margin-top:6px;">
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#27AE60;"></div>
-          <span>Low</span>
+          <span>Rendah</span>
         </div>
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#F39C12;"></div>
-          <span>Mid</span>
+          <span>Sedang</span>
         </div>
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#E74C3C;"></div>
-          <span>High</span>
+          <span>Tinggi</span>
         </div>
       </div>
     </div>
@@ -513,7 +513,7 @@ with tab_existing:
                 st.markdown(
                     f'<div style="text-align:center;margin-top:-10px;">'
                     f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
-                    f'Churn Probability × 100 · Low · Mid · High</div>'
+                    f'Probabilitas Churn × 100 · Rendah · Sedang · Tinggi</div>'
                     f'<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">'
                     f'</div>'
                     f'<div style="margin-top:8px;">{segment_badge(seg)}</div>'
@@ -668,7 +668,7 @@ with tab_new:
             st.markdown(
                 f'<div style="text-align:center;margin-top:-10px;">'
                 f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
-                f'Churn Probability × 100 · Low · Mid · High</div>'
+                f'Probabilitas Churn × 100 · Rendah · Sedang · Tinggi</div>'
                 f'<div style="margin-top:6px;">{segment_badge(seg)}</div></div>',
                 unsafe_allow_html=True,
             )
@@ -842,9 +842,9 @@ with tab_bulk:
                 return "color:#E74C3C;font-weight:600" if v == "Churn" else "color:#27AE60;font-weight:600"
 
             def _color_seg(v):
-                return {"High": "color:#E74C3C;font-weight:600",
-                        "Mid":  "color:#F39C12;font-weight:600",
-                        "Low":  "color:#27AE60;font-weight:600"}.get(v, "")
+                return {"Tinggi": "color:#E74C3C;font-weight:600",
+                        "Sedang":  "color:#F39C12;font-weight:600",
+                        "Rendah":  "color:#27AE60;font-weight:600"}.get(v, "")
 
             styled = (
                 df_res[display_cols]
