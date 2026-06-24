@@ -469,6 +469,31 @@ with tab_existing:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
+
+            # ── Add-Ons card ──
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Add-On Services</div>', unsafe_allow_html=True)
+            col_add1, col_add2, col_add3 = st.columns(3)
+            with col_add1:
+                st.markdown(
+                    info_row("Multiple Lines",    str(found.get("MultipleLines",    "—"))) +
+                    info_row("Online Backup",     str(found.get("OnlineBackup",     "—"))),
+                    unsafe_allow_html=True,
+                )
+            with col_add2:
+                st.markdown(
+                    info_row("Device Protection", str(found.get("DeviceProtection", "—"))) +
+                    info_row("Streaming TV",      str(found.get("StreamingTV",      "—"))),
+                    unsafe_allow_html=True,
+                )
+            with col_add3:
+                st.markdown(
+                    info_row("Streaming Movies",  str(found.get("StreamingMovies",  "—"))) +
+                    info_row("Add-On Count",      str(sum(1 for col in ["OnlineBackup","DeviceProtection","TechSupport","StreamingTV","StreamingMovies","OnlineSecurity"] if str(found.get(col,"")) == "Yes")) + " layanan aktif"),
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
             st.markdown('<div class="section-title">Churn Analysis Result</div>', unsafe_allow_html=True)
 
             col_g, col_d = st.columns([1, 1])
