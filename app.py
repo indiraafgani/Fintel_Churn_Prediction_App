@@ -371,7 +371,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
-  <h1>FINTel Churn Intelligence Dashboard</h1>
+  <h1>Sistem Prediksi Churn Pelanggan FINTel</h1>
   <p>Prediksi churn berbasis Machine Learning, segmentasi risiko pelanggan (Rendah/Sedang/Tinggi), serta rekomendasi retensi yang dipersonalisasi berdasarkan analisis SHAP.</p>
 </div>
 """, unsafe_allow_html=True)
