@@ -170,16 +170,16 @@ def probability_histogram(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         barmode="overlay",
         title=dict(text="Churn Probability Distribution", font=dict(size=13, color=C_PRIMARY), x=0.5),
-        height=280, margin=dict(l=16, r=16, t=40, b=16), **_BASE,
+        height=280, margin=dict(l=16, r=16, t=40, b=50), # <-- b: 16 → 50
+        **_BASE,
         xaxis=dict(title="Probability", showgrid=True, gridcolor=C_BG,
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(title="Count", showgrid=True, gridcolor=C_BG,
                    tickfont=dict(size=10, color=C_SOFT)),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.25,
+        legend=dict(orientation="h", yanchor="top", y=-0.22, # <-- yanchor: bottom→top, y: -0.25→-0.22
                     xanchor="center", x=0.5, font=dict(size=11)),
     )
     return fig
-
 
 def churn_score_histogram(df: pd.DataFrame) -> go.Figure:
     if "Churn_Score" not in df.columns:
