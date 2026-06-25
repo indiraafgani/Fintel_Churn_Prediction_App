@@ -24,7 +24,6 @@ from utils.prediction import (
 )
 from utils.visualization import (
     churn_score_gauge,
-    shap_individual_bar,
     shap_global_bar,
     churn_distribution_donut,
     segment_bar,
@@ -107,7 +106,6 @@ html, body, [class*="css"] {
 .dir-up            { background: #FEE2E2; color: #991B1B; }
 .dir-dn            { background: #D1FAE5; color: #065F46; }
 
-.rec-card          { background: white; border: 1px solid rgba(15,29,61,0.06); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
 .rec-item          { display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; align-items: flex-start; }
 .rec-rank-badge    { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: white; }
 .rec-content       { flex: 1; }
@@ -157,9 +155,9 @@ except FileNotFoundError:
     st.error("Model file tidak ditemukan. Pastikan `models/artifacts.pkl` tersedia.")
     st.stop()
 
-metrics          = artifacts["model_metrics"]
-global_shap      = artifacts["global_shap_importance"]
-selected_names   = artifacts["selected_feature_names"]
+metrics        = artifacts["model_metrics"]
+global_shap    = artifacts["global_shap_importance"]
+selected_names = artifacts["selected_feature_names"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -187,12 +185,13 @@ def load_city_list():
 
 city_list = load_city_list()
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # HTML HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def segment_badge(seg: str) -> str:
-    cls  = {"Tinggi": "b-high", "Sedang": "b-mid", "Rendah": "b-low"}.get(seg, "b-low")
+    cls = {"Tinggi": "b-high", "Sedang": "b-mid", "Rendah": "b-low"}.get(seg, "b-low")
     return f'<span class="badge {cls}"> Churn {seg}</span>'
 
 
@@ -220,9 +219,9 @@ def prob_bar(prob: float) -> str:
 
 def pred_box(prob: float, threshold: float) -> str:
     if prob >= threshold:
-        label, bg, border, color = "Diprediksi Akan Churn",   "#FEF2F2", "#E74C3C55", "#991B1B"
+        label, bg, border, color = "Diprediksi Akan Churn",    "#FEF2F2", "#E74C3C55", "#991B1B"
     else:
-        label, bg, border, color = "Diprediksi Akan Bertahan",     "#F0FDF4", "#27AE6055", "#065F46"
+        label, bg, border, color = "Diprediksi Akan Bertahan", "#F0FDF4", "#27AE6055", "#065F46"
     return (
         f'<div class="pred-box" style="background:{bg};border:1px solid {border};">'
         f'<div style="font-size:13px;font-weight:700;color:{color};">{label}</div>'
@@ -238,15 +237,14 @@ def shap_rows_html(shap_display: list) -> str:
     max_abs = max(abs(d["value"]) for d in shap_display) if shap_display else 1
     html = ""
     for i, d in enumerate(shap_display):
-        rank_n   = i + 1
-        r_color  = rank_colors[i] if i < 3 else rank_bg_gray
-        fill_c   = "#E74C3C" if d["direction"] == "up" else "#27AE60"
-        dir_cls  = "dir-up" if d["direction"] == "up" else "dir-dn"
-        dir_lbl  = "↑ Churn" if d["direction"] == "up" else "↓ Churn"
-        bar_w    = int(abs(d["value"]) / max_abs * 100) if max_abs else 0
+        r_color = rank_colors[i] if i < 3 else rank_bg_gray
+        fill_c  = "#E74C3C" if d["direction"] == "up" else "#27AE60"
+        dir_cls = "dir-up" if d["direction"] == "up" else "dir-dn"
+        dir_lbl = "↑ Churn" if d["direction"] == "up" else "↓ Churn"
+        bar_w   = int(abs(d["value"]) / max_abs * 100) if max_abs else 0
         html += (
             f'<div class="shap-row">'
-            f'<div class="shap-rank" style="background:{r_color};">{rank_n}</div>'
+            f'<div class="shap-rank" style="background:{r_color};">{i+1}</div>'
             f'<div class="shap-name" title="{d["name"]}">{d["name"]}</div>'
             f'<div class="shap-track-w">'
             f'<div class="shap-fill" style="width:{bar_w}%;background:{fill_c};"></div>'
@@ -257,10 +255,10 @@ def shap_rows_html(shap_display: list) -> str:
     return html
 
 
-REC_BG = {1: "rgba(231,76,60,0.07)", 2: "rgba(243,156,18,0.07)", 3: "rgba(59,130,246,0.07)"}
-REC_BORDER = {1: "#E74C3C", 2: "#F39C12", 3: "#3B82F6"}
-REC_BADGE_BG = {1: "#E74C3C", 2: "#F39C12", 3: "#3B82F6"}
-LEVEL_PILL_CLS = {1: "level-1", 2: "level-2", 3: "level-3"}
+REC_BG       = {1: "rgba(231,76,60,0.07)",  2: "rgba(243,156,18,0.07)", 3: "rgba(59,130,246,0.07)"}
+REC_BORDER   = {1: "#E74C3C",               2: "#F39C12",               3: "#3B82F6"}
+REC_BADGE_BG = {1: "#E74C3C",               2: "#F39C12",               3: "#3B82F6"}
+LEVEL_PILL   = {1: "level-1",               2: "level-2",               3: "level-3"}
 
 def render_rec_cards(recommendations: list):
     for rec in recommendations:
@@ -268,7 +266,7 @@ def render_rec_cards(recommendations: list):
         bg    = REC_BG[rank]
         bdr   = REC_BORDER[rank]
         badge = REC_BADGE_BG[rank]
-        pill  = LEVEL_PILL_CLS[rank]
+        pill  = LEVEL_PILL[rank]
         st.markdown(
             f'<div class="rec-item" style="background:{bg};border-left:3px solid {bdr};">'
             f'<div class="rec-rank-badge" style="background:{badge};">{rank}</div>'
@@ -292,7 +290,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section">Model Tentang</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Tentang Model</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
       <div class="sb-pill-l">Model</div>
@@ -304,7 +302,7 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Dataset</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
-      <div class="sb-pill-l">Total Pelanggans</div>
+      <div class="sb-pill-l">Total Pelanggan</div>
       <div class="sb-pill-v">7,032</div>
       <div class="sb-pill-s">Telco Customer Churn · IBM Dataset</div>
     </div>
@@ -318,7 +316,7 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Segmentasi Churn</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-pill">
-      <div class="sb-pill-l">Segmentasi Churn</div>
+      <div class="sb-pill-l">Segmentasi Risiko</div>
       <div class="seg-legend-row" style="margin-top:6px;">
         <div class="seg-dot-item">
           <div class="seg-dot" style="background:#27AE60;"></div>
@@ -350,7 +348,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="sb-section">Tujuan Bisnis </div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section">Tujuan Bisnis</div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.65;padding:0 2px;">
       Prediksi churn pelanggan dan berikan rekomendasi retensi personal
@@ -361,19 +359,20 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sb-footer">
-      FINTel <br>
+      FINTel<br>
       Akbar K. · Khaerun N. · Indira F.A.
     </div>
     """, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MAIN — HEADER
+# MAIN HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
   <h1>Sistem Prediksi Churn Pelanggan FINTel</h1>
-  <p>Prediksi churn berbasis Machine Learning, segmentasi risiko pelanggan (Rendah/Sedang/Tinggi), serta rekomendasi retensi yang dipersonalisasi berdasarkan analisis SHAP.</p>
+  <p>Prediksi churn berbasis Machine Learning, segmentasi risiko pelanggan (Rendah/Sedang/Tinggi),
+  serta rekomendasi retensi yang dipersonalisasi berdasarkan analisis SHAP.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -385,7 +384,7 @@ tab_existing, tab_new, tab_bulk = st.tabs([
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 1 — Pelanggan Lama
+#  TAB 1 — PELANGGAN LAMA
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_existing:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -394,12 +393,18 @@ with tab_existing:
     with col_in:
         st.markdown('<div class="section-title">Masukkan Customer ID</div>', unsafe_allow_html=True)
         cid_input = st.text_input(
-            "Customer ID", placeholder="e.g. 7216-EWTRS",
+            "Customer ID", placeholder="e.g. 7590-VHVEG",
             label_visibility="collapsed",
+        )
+    with col_hint:
+        st.markdown(
+            '<div style="padding-top:32px;font-size:12px;color:#6B7280;">'
+            'Masukkan Customer ID pelanggan dari dataset. Contoh: <strong>7590-VHVEG</strong></div>',
+            unsafe_allow_html=True,
         )
 
     if cid_input:
-        cid = cid_input.strip().upper()
+        cid   = cid_input.strip().upper()
         found = None
         if ref_data is not None:
             match = ref_data[ref_data["customerID"].str.upper() == cid]
@@ -417,7 +422,6 @@ with tab_existing:
             thr  = result["threshold"]
             cs   = result["churn_score"]
 
-            # ── Header strip ──
             st.markdown(f"""
             <div style="background:white;border-radius:12px;padding:14px 20px;margin-bottom:14px;
                         border:1px solid rgba(15,29,61,0.07);display:flex;
@@ -436,16 +440,15 @@ with tab_existing:
             </div>
             """, unsafe_allow_html=True)
 
-            # ── Info cards ──
             col_a, col_b, col_c = st.columns(3)
             with col_a:
                 st.markdown('<div class="fin-card"><div class="fin-card-hdr">Ringkasan Pelanggan</div>', unsafe_allow_html=True)
                 st.markdown(
                     info_row("Customer ID", f'<span style="font-family:JetBrains Mono,monospace;font-size:11px">{cid}</span>') +
-                    info_row("Gender",       str(found.get("gender", "—"))) +
-                    info_row("Senior Citizen", str(found.get("SeniorCitizen", "—"))) +
-                    info_row("Partner",       str(found.get("Partner", "—"))) +
-                    info_row("Dependents",    str(found.get("Dependents", "—"))),
+                    info_row("Gender",        str(found.get("gender",        "—"))) +
+                    info_row("Senior Citizen",str(found.get("SeniorCitizen", "—"))) +
+                    info_row("Partner",       str(found.get("Partner",       "—"))) +
+                    info_row("Dependents",    str(found.get("Dependents",    "—"))),
                     unsafe_allow_html=True,
                 )
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -465,18 +468,17 @@ with tab_existing:
             with col_c:
                 st.markdown('<div class="fin-card"><div class="fin-card-hdr">Informasi Pembayaran</div>', unsafe_allow_html=True)
                 st.markdown(
-                    info_row("Monthly Charges", f'${float(found.get("MonthlyCharges", 0)):.2f}') +
-                    info_row("Total Charges",   f'${float(found.get("TotalCharges", 0)):,.2f}') +
-                    info_row("Payment Method",  str(found.get("PaymentMethod", "—"))) +
-                    info_row("Paperless Billing", str(found.get("PaperlessBilling", "—"))) +
-                    info_row("Est. CLTV",       f'${int(found.get("CLTV", 0)):,}'),
+                    info_row("Monthly Charges",  f'${float(found.get("MonthlyCharges", 0)):.2f}') +
+                    info_row("Total Charges",    f'${float(found.get("TotalCharges",   0)):,.2f}') +
+                    info_row("Payment Method",   str(found.get("PaymentMethod",   "—"))) +
+                    info_row("Paperless Billing",str(found.get("PaperlessBilling","—"))) +
+                    info_row("Est. CLTV",        f'${int(found.get("CLTV", 0)):,}'),
                     unsafe_allow_html=True,
                 )
                 st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
 
-            # ── Add-Ons card ──
             st.markdown('<div class="fin-card"><div class="fin-card-hdr">Layanan Tambahan (Add-On)</div>', unsafe_allow_html=True)
             col_add1, col_add2, col_add3 = st.columns(3)
             with col_add1:
@@ -500,11 +502,11 @@ with tab_existing:
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Churn Analysis Result</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Hasil Analisis Churn</div>', unsafe_allow_html=True)
 
             col_g, col_d = st.columns([1, 1])
             with col_g:
-                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Churn Probability</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fin-card"><div class="fin-card-hdr">Probabilitas Churn</div>', unsafe_allow_html=True)
                 st.plotly_chart(
                     churn_score_gauge(cs, seg),
                     use_container_width=True,
@@ -514,8 +516,6 @@ with tab_existing:
                     f'<div style="text-align:center;margin-top:-10px;">'
                     f'<div style="font-size:9px;color:#9AADC2;margin-bottom:5px;">'
                     f'Probabilitas Churn × 100 · Rendah · Sedang · Tinggi</div>'
-                    f'<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">'
-                    f'</div>'
                     f'<div style="margin-top:8px;">{segment_badge(seg)}</div>'
                     f'</div>',
                     unsafe_allow_html=True,
@@ -534,7 +534,6 @@ with tab_existing:
                 )
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # ── SHAP + Recommendations ──
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
             st.markdown('<div class="section-title">Analisis SHAP per Pelanggan & Rekomendasi Personal</div>', unsafe_allow_html=True)
 
@@ -547,7 +546,7 @@ with tab_existing:
             with col_rec:
                 st.markdown(
                     f'<div class="fin-card">'
-                    f'<div class="fin-card-hdr">Rekomenasi Retensi · {segment_badge(seg)}</div>'
+                    f'<div class="fin-card-hdr">Rekomendasi Retensi · {segment_badge(seg)}</div>'
                     f'<div style="font-size:10px;color:#9AADC2;margin-bottom:10px;">'
                     f'Berdasarkan top 3 SHAP feature pelanggan ini</div>',
                     unsafe_allow_html=True,
@@ -555,7 +554,6 @@ with tab_existing:
                 render_rec_cards(result["recommendations"])
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # ── Global SHAP chart ──
             with st.expander("Global Feature Importance (semua pelanggan)", expanded=False):
                 st.plotly_chart(
                     shap_global_bar(global_shap),
@@ -567,20 +565,17 @@ with tab_existing:
         st.markdown("""
         <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
                     border:2px dashed rgba(71,105,150,0.2);">
-          <div style="font-size:44px;margin-bottom:14px;"></div>
           <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
             Masukkan Customer ID untuk melihat laporan churn analysis</div>
           <div style="font-size:12px;color:#9AADC2;">
-            Format: <code style="background:#EBECEF;padding:2px 8px;
-            border-radius:4px;color:#1A3462;">7590-VHVEG</code> sampai
-            <code style="background:#EBECEF;padding:2px 8px;
-            border-radius:4px;color:#1A3462;">7216-EWTRS</code></div>
+            Contoh: <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">7590-VHVEG</code>
+            · <code style="background:#EBECEF;padding:2px 8px;border-radius:4px;color:#1A3462;">7216-EWTRS</code></div>
         </div>
         """, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 2 — NEW CUSTOMER
+#  TAB 2 — PELANGGAN BARU
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_new:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -605,45 +600,54 @@ with tab_new:
 
         with c2:
             st.markdown('<div class="section-title">Layanan</div>', unsafe_allow_html=True)
-            phone_svc  = st.selectbox("Phone Service",     ["Yes", "No"])
-            multi_lines= st.selectbox("Multiple Lines",     ["No", "Yes", "No phone service"])
-            internet   = st.selectbox("Internet Service",   ["DSL", "Fiber optic", "No"])
-            online_sec = st.selectbox("Online Security",    ["No", "Yes", "No internet service"])
-            online_bk  = st.selectbox("Online Backup",      ["No", "Yes", "No internet service"])
-            dev_prot   = st.selectbox("Device Protection",  ["No", "Yes", "No internet service"])
-            tech_sup   = st.selectbox("Tech Support",       ["No", "Yes", "No internet service"])
-            stream_tv  = st.selectbox("Streaming TV",       ["No", "Yes", "No internet service"])
-            stream_mov = st.selectbox("Streaming Movies",   ["No", "Yes", "No internet service"])
+            phone_svc   = st.selectbox("Phone Service",     ["Yes", "No"])
+            multi_lines = st.selectbox("Multiple Lines",     ["No", "Yes", "No phone service"])
+            internet    = st.selectbox("Internet Service",   ["DSL", "Fiber optic", "No"])
+            online_sec  = st.selectbox("Online Security",    ["No", "Yes", "No internet service"])
+            online_bk   = st.selectbox("Online Backup",      ["No", "Yes", "No internet service"])
+            dev_prot    = st.selectbox("Device Protection",  ["No", "Yes", "No internet service"])
+            tech_sup    = st.selectbox("Tech Support",       ["No", "Yes", "No internet service"])
+            stream_tv   = st.selectbox("Streaming TV",       ["No", "Yes", "No internet service"])
+            stream_mov  = st.selectbox("Streaming Movies",   ["No", "Yes", "No internet service"])
 
         with c3:
             st.markdown('<div class="section-title">Akun dan Tagihan</div>', unsafe_allow_html=True)
-            contract   = st.selectbox("Contract",          ["Month-to-month", "One year", "Two year"])
-            paperless  = st.selectbox("Paperless Billing", ["Yes", "No"])
-            payment    = st.selectbox("Payment Method",    [
+            contract    = st.selectbox("Contract",          ["Month-to-month", "One year", "Two year"])
+            paperless   = st.selectbox("Paperless Billing", ["Yes", "No"])
+            payment     = st.selectbox("Payment Method",    [
                 "Electronic check", "Mailed check",
                 "Bank transfer (automatic)", "Credit card (automatic)",
             ])
             tenure      = st.number_input("Tenure (months)", min_value=0, max_value=72, value=6, step=1)
             monthly_chg = st.number_input("Monthly Charges ($)", min_value=18.0, max_value=120.0, value=65.0, step=0.5)
             total_chg   = round(monthly_chg * max(int(tenure), 1), 2)
-            cltv        = int(monthly_chg * 60)
+            st.caption(f"Est. Total Charges: ${total_chg:,.2f}")
 
         st.markdown("<br>", unsafe_allow_html=True)
         submitted = st.form_submit_button("Prediksi Churn", use_container_width=True)
 
     if submitted:
         input_row = pd.Series({
-            "gender": gender, "SeniorCitizen": senior, "Partner": partner,
-            "Dependents": dependents, "tenure": float(tenure),
-            "PhoneService": phone_svc, "MultipleLines": multi_lines,
-            "InternetService": internet, "OnlineSecurity": online_sec,
-            "OnlineBackup": online_bk, "DeviceProtection": dev_prot,
-            "TechSupport": tech_sup, "StreamingTV": stream_tv,
-            "StreamingMovies": stream_mov, "Contract": contract,
-            "PaperlessBilling": paperless, "PaymentMethod": payment,
-            "MonthlyCharges": float(monthly_chg),
-            "TotalCharges":   float(total_chg),
-            "City":           city,
+            "gender":          gender,
+            "SeniorCitizen":   senior,
+            "Partner":         partner,
+            "Dependents":      dependents,
+            "tenure":          float(tenure),
+            "PhoneService":    phone_svc,
+            "MultipleLines":   multi_lines,
+            "InternetService": internet,
+            "OnlineSecurity":  online_sec,
+            "OnlineBackup":    online_bk,
+            "DeviceProtection": dev_prot,
+            "TechSupport":     tech_sup,
+            "StreamingTV":     stream_tv,
+            "StreamingMovies": stream_mov,
+            "Contract":        contract,
+            "PaperlessBilling": paperless,
+            "PaymentMethod":   payment,
+            "MonthlyCharges":  float(monthly_chg),
+            "TotalCharges":    float(total_chg),
+            "City":            city,
         })
 
         with st.spinner("Menghitung SHAP values..."):
@@ -691,7 +695,7 @@ with tab_new:
 
         col_shap, col_rec = st.columns([1, 1])
         with col_shap:
-            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Fitur SHAP Teratas (Berdasarkan Peringkat) (ranked)</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fin-card"><div class="fin-card-hdr">Fitur SHAP Teratas (Berdasarkan Peringkat)</div>', unsafe_allow_html=True)
             st.markdown(shap_rows_html(result["shap_display"]), unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -719,7 +723,7 @@ with tab_bulk:
         ```
         {", ".join(FEATURE_COLS)}
         ```
-        Kolom opsional yang ditampilkan jika ada: `CustomerID`
+        Kolom opsional yang ditampilkan jika ada: `customerID`
         """)
         template = pd.DataFrame(columns=["customerID"] + FEATURE_COLS)
         st.download_button(
@@ -731,14 +735,13 @@ with tab_bulk:
 
     st.markdown('<div class="section-title">Upload File</div>', unsafe_allow_html=True)
 
+    # ── Session state init ──
     if "bulk_file" not in st.session_state:
-        st.session_state.bulk_file = None
-
-    if "bulk_file" not in st.session_state:
-        st.session_state.bulk_file = None
+        st.session_state.bulk_file     = None
         st.session_state.bulk_filename = None
-        st.session_state.bulk_bytes = None
+        st.session_state.bulk_bytes    = None
 
+    # ── File uploader atau file info ──
     if st.session_state.bulk_file is None:
         uploaded_input = st.file_uploader(
             "Unggah CSV", type=["csv"],
@@ -747,41 +750,28 @@ with tab_bulk:
         )
         if uploaded_input is not None:
             st.session_state.bulk_filename = uploaded_input.name
-            st.session_state.bulk_bytes   = uploaded_input.getvalue()
-            st.session_state.bulk_file    = True
+            st.session_state.bulk_bytes    = uploaded_input.getvalue()
+            st.session_state.bulk_file     = True
             st.rerun()
         uploaded = None
     else:
-        import io
         uploaded = io.BytesIO(st.session_state.bulk_bytes)
         col_fname, col_drop = st.columns([4, 1])
         with col_fname:
             st.markdown(
                 f'<div style="background:white;border-radius:8px;padding:10px 16px;'
                 f'border:1px solid rgba(15,29,61,0.1);font-size:13px;color:#0F1D3D;">'
-                f'{st.session_state.bulk_filename}</div>',
+                f'📄 {st.session_state.bulk_filename}</div>',
                 unsafe_allow_html=True,
             )
         with col_drop:
-            if st.button("Hapus File", use_container_width=True):
+            if st.button("🗑 Hapus File", key="btn_hapus_file", use_container_width=True):
                 st.session_state.bulk_file     = None
                 st.session_state.bulk_filename = None
                 st.session_state.bulk_bytes    = None
                 st.rerun()
-                
-        col_fname, col_drop = st.columns([4, 1])
-        with col_fname:
-            st.markdown(
-                f'<div style="background:white;border-radius:8px;padding:10px 16px;'
-                f'border:1px solid rgba(15,29,61,0.1);font-size:13px;color:#0F1D3D;">'
-                f'{st.session_state.bulk_filename}</div>',
-                unsafe_allow_html=True,
-            )
-        with col_drop:
-            if st.button("Hapus File", use_container_width=True):
-                st.session_state.bulk_file = None
-                st.rerun()
 
+    # ── Preview & prediksi ──
     if uploaded is not None:
         try:
             df_up = pd.read_csv(uploaded)
@@ -805,24 +795,22 @@ with tab_bulk:
             </div>""", unsafe_allow_html=True)
         with m2:
             st.markdown(f"""<div class="metric-card">
-              <div class="metric-label">Columns</div>
+              <div class="metric-label">Kolom</div>
               <div class="metric-value">{len(df_up.columns)}</div>
             </div>""", unsafe_allow_html=True)
         with m3:
             avg_ten = df_up["tenure"].mean()
             st.markdown(f"""<div class="metric-card">
-              <div class="metric-label">Avg Tenure</div>
+              <div class="metric-label">Rata-rata Tenure</div>
               <div class="metric-value">{avg_ten:.1f}</div>
-              <div class="metric-sub">months</div>
+              <div class="metric-sub">bulan</div>
             </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.dataframe(df_up.head(10), use_container_width=True, hide_index=True)
 
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-        run_btn = st.button("Jalankan Prediksi Secara Keseluruhan", use_container_width=True)
-
-        if run_btn:
+        if st.button("Jalankan Prediksi Secara Keseluruhan", key="btn_run_bulk", use_container_width=True):
             with st.spinner("Menjalankan prediksi untuk semua customer..."):
                 df_res = predict_bulk(df_up.copy(), artifacts)
 
@@ -831,11 +819,11 @@ with tab_bulk:
             n_no_churn = n_total - n_churn
             churn_rate = n_churn / n_total * 100 if n_total > 0 else 0
 
-            st.markdown('<div class="section-title">Summary Metrics</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Ringkasan Metrik</div>', unsafe_allow_html=True)
             mc1, mc2, mc3, mc4 = st.columns(4)
             with mc1:
                 st.markdown(f"""<div class="metric-card">
-                  <div class="metric-label">Total Pelanggan </div>
+                  <div class="metric-label">Total Pelanggan</div>
                   <div class="metric-value">{n_total:,}</div>
                 </div>""", unsafe_allow_html=True)
             with mc2:
@@ -855,7 +843,7 @@ with tab_bulk:
                 </div>""", unsafe_allow_html=True)
 
             st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Visualizations</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Visualisasi</div>', unsafe_allow_html=True)
 
             v1, v2 = st.columns(2)
             with v1:
@@ -884,45 +872,40 @@ with tab_bulk:
             )
             display_cols = [c for c in display_cols if c in df_res.columns]
 
-            def _color_label(v):
-                return "color:#E74C3C;font-weight:600" if v == "Churn" else "color:#27AE60;font-weight:600"
-
-            def _color_seg(v):
-                return {"Tinggi": "color:#E74C3C;font-weight:600",
-                        "Sedang":  "color:#F39C12;font-weight:600",
-                        "Rendah":  "color:#27AE60;font-weight:600"}.get(v, "")
-
             styled = (
                 df_res[display_cols]
                 .style
-                .applymap(_color_label, subset=["Predicted_Label"])
-                .applymap(_color_seg,   subset=["Churn_Segment"])
-                .format({"Churn_Probability": "{:.4f}",
-                         "MonthlyCharges": "${:.2f}"})
+                .applymap(lambda v: "color:#E74C3C;font-weight:600" if v == "Churn"
+                          else "color:#27AE60;font-weight:600", subset=["Predicted_Label"])
+                .applymap(lambda v: {"Tinggi": "color:#E74C3C;font-weight:600",
+                                     "Sedang": "color:#F39C12;font-weight:600",
+                                     "Rendah": "color:#27AE60;font-weight:600"}.get(v, ""),
+                          subset=["Churn_Segment"])
+                .format({"Churn_Probability": "{:.4f}", "MonthlyCharges": "${:.2f}"})
             )
             st.dataframe(styled, use_container_width=True, hide_index=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
-            csv_out = df_res[display_cols].to_csv(index=False).encode("utf-8")
             st.download_button(
-                "⬇ Download Prediction Result (CSV)",
-                data=csv_out,
+                "⬇ Download Hasil Prediksi (CSV)",
+                data=df_res[display_cols].to_csv(index=False).encode("utf-8"),
                 file_name="fintel_bulk_result.csv",
                 mime="text/csv",
                 use_container_width=True,
             )
 
-    if st.session_state.get("bulk_file") is None:
-        st.markdown("""
-        <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
-                    border:2px dashed rgba(71,105,150,0.2);">
-          <div style="font-size:44px;margin-bottom:14px;"></div>
-          <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
-            Upload CSV untuk prediksi massal</div>
-          <div style="font-size:12px;color:#9AADC2;">
-            Gunakan tombol "Format CSV" di atas untuk melihat kolom yang dibutuhkan</div>
-        </div>
-        """, unsafe_allow_html=True)
+    else:
+        if st.session_state.bulk_file is None:
+            st.markdown("""
+            <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
+                        border:2px dashed rgba(71,105,150,0.2);">
+              <div style="font-size:15px;font-weight:600;color:#476996;margin-bottom:8px;">
+                Upload CSV untuk prediksi massal</div>
+              <div style="font-size:12px;color:#9AADC2;">
+                Gunakan tombol "Format CSV" di atas untuk melihat kolom yang dibutuhkan</div>
+            </div>
+            """, unsafe_allow_html=True)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FOOTER
@@ -931,7 +914,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align:center;padding:16px;border-top:1px solid rgba(15,29,61,0.08);
             font-size:11px;color:#9AADC2;">
-  FINTel Customer Churn Intelligence <br>
+  FINTel Customer Churn Intelligence<br>
   Akbar Kanugraha · Khaerun Nisa'Tri Safaati · Indira Faisa Afgani
 </div>
 """, unsafe_allow_html=True)
