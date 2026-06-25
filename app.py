@@ -734,6 +734,11 @@ with tab_bulk:
     if "bulk_file" not in st.session_state:
         st.session_state.bulk_file = None
 
+    if "bulk_file" not in st.session_state:
+        st.session_state.bulk_file = None
+        st.session_state.bulk_filename = None
+        st.session_state.bulk_bytes = None
+
     if st.session_state.bulk_file is None:
         uploaded_input = st.file_uploader(
             "Unggah CSV", type=["csv"],
@@ -741,11 +746,29 @@ with tab_bulk:
             help="CSV dengan kolom sesuai format model FINTel",
         )
         if uploaded_input is not None:
-            st.session_state.bulk_file = uploaded_input
+            st.session_state.bulk_filename = uploaded_input.name
+            st.session_state.bulk_bytes   = uploaded_input.getvalue()
+            st.session_state.bulk_file    = True
             st.rerun()
         uploaded = None
     else:
-        uploaded = st.session_state.bulk_file
+        import io
+        uploaded = io.BytesIO(st.session_state.bulk_bytes)
+        col_fname, col_drop = st.columns([4, 1])
+        with col_fname:
+            st.markdown(
+                f'<div style="background:white;border-radius:8px;padding:10px 16px;'
+                f'border:1px solid rgba(15,29,61,0.1);font-size:13px;color:#0F1D3D;">'
+                f'{st.session_state.bulk_filename}</div>',
+                unsafe_allow_html=True,
+            )
+        with col_drop:
+            if st.button("Hapus File", use_container_width=True):
+                st.session_state.bulk_file     = None
+                st.session_state.bulk_filename = None
+                st.session_state.bulk_bytes    = None
+                st.rerun()
+                
         col_fname, col_drop = st.columns([4, 1])
         with col_fname:
             st.markdown(
