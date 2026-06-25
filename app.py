@@ -92,7 +92,7 @@ html, body, [class*="css"] {
 .prob-track        { background: var(--bg); border-radius: 5px; height: 9px; overflow: hidden; }
 .pred-box          { border-radius: 8px; padding: 9px 14px; text-align: center; margin: 10px 0; }
 .fin-divider       { height: 1px; background: linear-gradient(to right, var(--bg), rgba(71,105,150,0.2), var(--bg)); margin: 16px 0; }
-.metric-card       { background: white; border: 1px solid rgba(15,29,61,0.06); border-radius: 10px; padding: 16px 18px; text-align: center; }
+.metric-card { background: white; border: 1px solid rgba(15,29,61,0.06); border-radius: 10px; padding: 16px 18px; text-align: center; min-height: 100px; }
 .metric-label      { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 4px; }
 .metric-value      { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.1; }
 .metric-sub        { font-size: 11px; color: var(--muted); margin-top: 3px; }
@@ -781,7 +781,7 @@ with tab_bulk:
         st.markdown('<div class="fin-divider"></div>', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Preview Dataset</div>', unsafe_allow_html=True)
 
-        m1, m2, m3 = st.columns(3)
+        m1, m2, m3 = st.columns([1, 1, 1])
         with m1:
             st.markdown(f"""<div class="metric-card">
               <div class="metric-label">Total Baris</div>
