@@ -66,9 +66,12 @@ Segmentasi berdasarkan `best_threshold` dari model, dibagi 3 sama rata di atas t
 ### Recommendation Logic
 ```
 Top-3 SHAP features (by |SHAP value|) per customer
-  └── Rank 1 (SHAP terbesar) → Campaign HIGH    → Priority action   (50% budget)
+  └── Rank 1 (SHAP positif terbesar) → Campaign HIGH    → Priority action   (50% budget)
   └── Rank 2                 → Campaign MEDIUM  → Supporting action (35% budget)
   └── Rank 3                 → Campaign LOW     → Additional action (15% budget)
+
+Hanya fitur dengan SHAP > 0 yang digunakan. Fallback ke magnitude tertinggi jika tidak ada fitur positif.
+
 ```
 Setiap fitur memiliki 3 campaign unik dari `CAMPAIGN_CATALOG`. Rank menentukan tingkat urgensi dan alokasi budget retensi.
 
@@ -133,11 +136,9 @@ git push -u origin main
 
 ## Model Performance
 
-| Metric | Value |
-|--------|-------|
-| F2 (β=2) | ~0.75 |
-| ROC-AUC | ~0.85 |
-| Threshold | ~0.37 |
+| F2 (β=2) | ~0.74 |
+| ROC-AUC | ~0.83 |
+| Threshold | ~0.26 |
 
 Threshold dioptimasi menggunakan F2-Score (β=2): Recall diprioritaskan 4× di atas Precision, sesuai asumsi bisnis bahwa biaya kehilangan pelanggan jauh lebih tinggi dari biaya intervensi retensi.
 
