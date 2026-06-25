@@ -746,8 +746,9 @@ with tab_bulk:
             st.session_state.bulk_filename = uploaded_input.name
             st.session_state.bulk_bytes    = uploaded_input.getvalue()
             st.session_state.bulk_file     = True
-            st.rerun()
-        uploaded = None
+            uploaded = io.BytesIO(st.session_state.bulk_bytes)
+        else:
+            uploaded = None
     else:
         uploaded = io.BytesIO(st.session_state.bulk_bytes)
         col_fname, col_drop = st.columns([4, 1])
