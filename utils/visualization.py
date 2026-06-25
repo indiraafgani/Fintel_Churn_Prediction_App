@@ -132,7 +132,7 @@ def churn_distribution_donut(n_churn: int, n_no_churn: int) -> go.Figure:
 def segment_bar(df: pd.DataFrame) -> go.Figure:
     if "Churn_Segment" not in df.columns:
         return go.Figure()
-    counts = df["Churn_Segment"].value_counts().reindex(["High", "Mid", "Low"], fill_value=0)
+    counts = df["Churn_Segment"].value_counts().reindex(["Tinggi", "Sedang", "Rendah"], fill_value=0)
     colors = [SEGMENT_COLORS[s] for s in counts.index]
 
     fig = go.Figure(go.Bar(
@@ -189,7 +189,7 @@ def churn_score_histogram(df: pd.DataFrame) -> go.Figure:
         x=df["Churn_Score"], nbinsx=20, marker_color=C_SECONDARY, opacity=0.85,
         hovertemplate="Score: %{x}<br>Count: %{y}<extra></extra>",
     ))
-    for x, color, label in [(33, C_SUCCESS, "Low|Mid"), (67, C_DANGER, "Mid|High")]:
+    for x, color, label in [(33, C_SUCCESS, "Rendah|Sedang"), (67, C_DANGER, "Sedang|Tinggi")]:
         fig.add_vline(x=x, line_dash="dash", line_color=color, line_width=1.5,
                       annotation_text=label, annotation_font_size=10,
                       annotation_font_color=color)
