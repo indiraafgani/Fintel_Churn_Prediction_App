@@ -761,15 +761,14 @@ with tab_bulk:
             st.markdown(
                 f'<div style="background:white;border-radius:8px;padding:10px 16px;'
                 f'border:1px solid rgba(15,29,61,0.1);font-size:13px;color:#0F1D3D;">'
-                f'📄 {st.session_state.bulk_filename}</div>',
+                f'{st.session_state.bulk_filename}</div>',
                 unsafe_allow_html=True,
             )
         with col_drop:
-            if st.button("🗑 Hapus File", key="btn_hapus_file", use_container_width=True):
+            if st.button("Hapus File", key="btn_hapus_file", use_container_width=True):
                 st.session_state.bulk_file     = None
                 st.session_state.bulk_filename = None
                 st.session_state.bulk_bytes    = None
-                st.rerun()
 
     # ── Preview & prediksi ──
     if uploaded is not None:
