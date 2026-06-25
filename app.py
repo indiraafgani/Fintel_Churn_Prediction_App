@@ -742,6 +742,7 @@ with tab_bulk:
         )
         if uploaded_input is not None:
             st.session_state.bulk_file = uploaded_input
+            st.rerun()
         uploaded = None
     else:
         uploaded = st.session_state.bulk_file
