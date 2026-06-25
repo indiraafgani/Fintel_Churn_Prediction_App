@@ -353,7 +353,7 @@ with st.sidebar:
     st.markdown('<div class="sb-section">Tujuan Bisnis </div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.65;padding:0 2px;">
-      Prediksi churn pelanggan dan merekomendasikan retensi personal
+      Prediksi churn pelanggan dan berikan rekomendasi retensi personal
       berbasis Top-3 SHAP features per individu.
     </div>
     """, unsafe_allow_html=True)
@@ -730,11 +730,33 @@ with tab_bulk:
         )
 
     st.markdown('<div class="section-title">Upload File</div>', unsafe_allow_html=True)
-    uploaded = st.file_uploader(
-        "Unggah CSV", type=["csv"],
-        label_visibility="collapsed",
-        help="CSV dengan kolom sesuai format model FINTel",
-    )
+
+    if "bulk_file" not in st.session_state:
+        st.session_state.bulk_file = None
+
+    if st.session_state.bulk_file is None:
+        uploaded_input = st.file_uploader(
+            "Unggah CSV", type=["csv"],
+            label_visibility="collapsed",
+            help="CSV dengan kolom sesuai format model FINTel",
+        )
+        if uploaded_input is not None:
+            st.session_state.bulk_file = uploaded_input
+        uploaded = None
+    else:
+        uploaded = st.session_state.bulk_file
+        col_fname, col_drop = st.columns([4, 1])
+        with col_fname:
+            st.markdown(
+                f'<div style="background:white;border-radius:8px;padding:10px 16px;'
+                f'border:1px solid rgba(15,29,61,0.1);font-size:13px;color:#0F1D3D;">'
+                f'📄 {uploaded.name}</div>',
+                unsafe_allow_html=True,
+            )
+        with col_drop:
+            if st.button("🗑 Hapus File", use_container_width=True):
+                st.session_state.bulk_file = None
+                st.rerun()
 
     if uploaded is not None:
         try:
@@ -866,7 +888,7 @@ with tab_bulk:
                 use_container_width=True,
             )
 
-    else:
+    if st.session_state.get("bulk_file") is None:
         st.markdown("""
         <div style="text-align:center;padding:56px 20px;background:white;border-radius:14px;
                     border:2px dashed rgba(71,105,150,0.2);">
