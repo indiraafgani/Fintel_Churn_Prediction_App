@@ -396,12 +396,6 @@ with tab_existing:
             "Customer ID", placeholder="e.g. 7590-VHVEG",
             label_visibility="collapsed",
         )
-    with col_hint:
-        st.markdown(
-            '<div style="padding-top:32px;font-size:12px;color:#6B7280;">'
-            'Masukkan Customer ID pelanggan dari dataset. Contoh: <strong>7590-VHVEG</strong></div>',
-            unsafe_allow_html=True,
-        )
 
     if cid_input:
         cid   = cid_input.strip().upper()
