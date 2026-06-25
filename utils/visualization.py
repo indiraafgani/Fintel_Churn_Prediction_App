@@ -175,8 +175,8 @@ def probability_histogram(df: pd.DataFrame) -> go.Figure:
                    tickfont=dict(size=10, color=C_SOFT)),
         yaxis=dict(title="Count", showgrid=True, gridcolor=C_BG,
                    tickfont=dict(size=10, color=C_SOFT)),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01,
-                    xanchor="right", x=1, font=dict(size=11)),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25,
+                    xanchor="center", x=0.5, font=dict(size=11)),
     )
     return fig
 
